@@ -17,6 +17,14 @@ employees ──┬── identity_accounts        (0..1 per employee)
 ai_insight_runs   (standalone; used from the AI phase onwards)
 ```
 
+## Reporting schema
+
+Power BI reads the `reporting` schema, not these tables: views shaped as dimensions
+(`dim_date`, `dim_employee`, `dim_workflow_type`) and facts (`fact_sync_runs`,
+`fact_sync_records`, `fact_workflow_runs`, `fact_workflow_actions`, `fact_attribute_changes`,
+`fact_dq_issues`). They are created by the second Alembic migration and described in
+[powerbi/README.md](../powerbi/README.md). A separate read-only login can read only these views.
+
 ## Two kinds of "employee ID"
 
 - `employees.employee_id` is the **HR business identifier** (`EMP00042`). It can be missing

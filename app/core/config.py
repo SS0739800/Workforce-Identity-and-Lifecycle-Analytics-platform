@@ -14,6 +14,9 @@ class Settings(BaseSettings):
     database_url: str
     test_database_url: str | None = None
     log_level: str = "INFO"
+    # Read-only login for Power BI (see scripts/create_reporting_user.py)
+    reporting_db_user: str = "powerbi_reader"
+    reporting_db_password: str | None = None
     data_dir: Path = PROJECT_ROOT / "data"
 
     @property
