@@ -1,7 +1,7 @@
 from datetime import date, datetime
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class ORMModel(BaseModel):
@@ -81,6 +81,46 @@ class ActivityEvent(BaseModel):
     event_type: str
     description: str
     source: str
+
+
+EmploymentType = Literal["full_time", "part_time", "intern", "contractor"]
+
+
+class EmployeeCreate(BaseModel):
+    """A new hire entered in HR. Department, title, location and manager are not checked
+    against reference data on purpose: the sync and the data-quality scan catch bad values."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    first_name: str = Field(min_length=1, max_length=100)
+    last_name: str = Field(min_length=1, max_length=100)
+    hire_date: date
+    employment_type: EmploymentType = "full_time"
+    department: str | None = Field(None, max_length=100)
+    job_title: str | None = Field(None, max_length=100)
+    manager_id: int | None = None
+    location: str | None = Field(None, max_length=100)
+    email: str | None = Field(None, max_length=255, description="Generated from the name if omitted")
+    employee_id: str | None = Field(None, max_length=20, description="Next EMP number if omitted")
+
+
+class EmployeeUpdate(BaseModel):
+    """HR attribute changes. Only the fields sent are changed; each change is logged."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    employee_id: str | None = Field(None, max_length=20)
+    first_name: str | None = Field(None, min_length=1, max_length=100)
+    last_name: str | None = Field(None, min_length=1, max_length=100)
+    email: str | None = Field(None, max_length=255)
+    department: str | None = Field(None, max_length=100)
+    job_title: str | None = Field(None, max_length=100)
+    manager_id: int | None = None
+    location: str | None = Field(None, max_length=100)
+    employment_type: EmploymentType | None = None
+    termination_date: date | None = None
+    employment_status: Literal["active", "terminated"] | None = None
+    leave_status: Literal["none", "on_leave"] | None = None
 
 
 class AttributeChangeOut(ORMModel):

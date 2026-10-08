@@ -49,3 +49,18 @@ def loaded_engine(db_engine, dataset):
 def session(loaded_engine):
     with Session(loaded_engine) as session:
         yield session
+
+
+@pytest.fixture
+def db(loaded_engine):
+    """A session whose changes are all rolled back after the test.
+
+    Commits inside the code under test only release a savepoint, so tests can create
+    employees and run syncs without affecting each other.
+    """
+    with loaded_engine.connect() as connection:
+        outer = connection.begin()
+        session = Session(bind=connection, join_transaction_mode="create_savepoint")
+        yield session
+        session.close()
+        outer.rollback()

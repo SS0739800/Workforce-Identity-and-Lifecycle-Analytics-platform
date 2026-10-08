@@ -89,7 +89,9 @@ Run locally:
 uvicorn app.main:app --reload
 ```
 
-Interactive documentation is at `http://127.0.0.1:8000/docs`. All endpoints are read-only `GET`s.
+Interactive documentation is at `http://127.0.0.1:8000/docs`. The endpoints below are read-only;
+the endpoints that change data (HR changes, sync runs, re-runs, scans) are described in
+[operations.md](operations.md).
 
 | Endpoint | Purpose |
 |----------|---------|

@@ -10,9 +10,10 @@ attribute sync from an HR export, offboarding cleanup, and leave/return handling
 This project rebuilds those concepts in Python on fully synthetic data. No employer code,
 infrastructure or data is used.
 
-> **Status: work in progress.** Phases 1–2 are in place: database, synthetic data, loading,
-> SQL analytics and a read-only REST API. Power BI, Streamlit, AI and AWS deployment come in
-> later phases and are not implemented yet.
+> **Status: work in progress.** Phases 1–3 are in place: database, synthetic data, loading,
+> SQL analytics, a REST API, and lifecycle operations (sync, workflows, data-quality scan) that run
+> against the database. Power BI, Streamlit, AI and AWS deployment come in later phases and are
+> not implemented yet.
 
 ## What exists so far
 
@@ -22,9 +23,13 @@ infrastructure or data is used.
 - Validation and loading of the generated CSV files into PostgreSQL.
 - 27 analytical SQL queries covering sync reliability, attribute changes, workflow failures,
   offboarding and access cleanup, and data quality. See [docs/analytics.md](docs/analytics.md).
-- A read-only FastAPI service for employee investigation and analytics.
-- Tests for the validation rules, generated data, load step, every query (checked against an
-  independent Python calculation) and the API.
+- A FastAPI service for employee investigation and analytics.
+- Lifecycle operations through the API: enter HR changes, run the sync, onboard, offboard,
+  handle leave and return, re-run failed workflows, and run the data-quality scan. The simulator
+  and the API share the same rules in `app/lifecycle/`. See [docs/operations.md](docs/operations.md).
+- Tests for the validation rules, the shared lifecycle engine, generated data, the load step,
+  every query (checked against an independent Python calculation), the lifecycle operations
+  against PostgreSQL, and the API.
 
 ## Setup
 
@@ -61,11 +66,13 @@ app/
   core/        configuration and logging
   db/          SQLAlchemy base and engine
   models/      database tables
-  lifecycle/   domain rules: reference data, validation, workflow plans, failure model
+  lifecycle/   shared rules: reference data, validation, sync rules, workflow plans,
+               failure model and the workflow executor
   synthetic/   the year-long simulation and its assumptions
   etl/         CSV read/write, validation and loading
   analytics/   named SQL queries (sql/*.sql) and the query registry
-  services/    analytics and employee lookups used by the API
+  services/    analytics, employee lookups, and database-backed sync, workflow,
+               data-quality and HR operations
   schemas/     Pydantic response models
   api/         FastAPI routers
   main.py      FastAPI application

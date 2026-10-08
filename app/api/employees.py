@@ -1,18 +1,22 @@
+from datetime import datetime
 from typing import Literal
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.orm import Session
 
+from app.api.deps import get_now
 from app.db.database import get_session
 from app.schemas.employee import (
     ActivityEvent,
     AttributeChangeOut,
+    EmployeeCreate,
     EmployeeDetail,
     EmployeeList,
     EmployeeSummary,
+    EmployeeUpdate,
 )
 from app.schemas.workflow import WorkflowRunOut
-from app.services import employee_service
+from app.services import employee_service, hr_service
 
 router = APIRouter(prefix="/api/employees", tags=["employees"])
 
@@ -37,8 +41,33 @@ def list_employees(
     )
 
 
+@router.post("", response_model=EmployeeDetail, status_code=status.HTTP_201_CREATED)
+def create_employee(
+    body: EmployeeCreate,
+    session: Session = Depends(get_session),
+    now: datetime = Depends(get_now),
+):
+    """Enter a new hire in the simulated HR system. The next sync starts onboarding."""
+    employee = hr_service.create_employee(session, body.model_dump(), now)
+    session.commit()
+    return employee_service.get_employee_detail(session, employee.id)
+
+
 @router.get("/{employee_db_id}", response_model=EmployeeDetail)
 def get_employee(employee_db_id: int, session: Session = Depends(get_session)):
+    return employee_service.get_employee_detail(session, employee_db_id)
+
+
+@router.patch("/{employee_db_id}", response_model=EmployeeDetail)
+def update_employee(
+    employee_db_id: int,
+    body: EmployeeUpdate,
+    session: Session = Depends(get_session),
+    now: datetime = Depends(get_now),
+):
+    """Change HR attributes. Transfers, terminations and leave take effect at the next sync."""
+    hr_service.update_employee(session, employee_db_id, body.model_dump(exclude_unset=True), now)
+    session.commit()
     return employee_service.get_employee_detail(session, employee_db_id)
 
 
