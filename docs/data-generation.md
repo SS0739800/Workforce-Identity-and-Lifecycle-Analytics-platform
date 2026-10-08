@@ -133,5 +133,7 @@ during the year and 26 employees (2.6%) still have an open issue at year end.
 - All timestamps are UTC; sites in different time zones are not modelled.
 - Employees hired before the simulated year have accounts and access but no workflow history.
 - Employment status is `active` from the moment HR creates the record (no separate pre-hire status).
+- The year ends at 30 Sep. Anyone terminated on that last day has not been offboarded yet (that
+  would happen overnight), so they still hold access but are not flagged as a data-quality issue.
 - Access is purely birthright, derived from department, site, title and employment type.
   There are no access requests or approvals.
