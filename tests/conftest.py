@@ -3,8 +3,10 @@ from alembic import command
 from alembic.config import Config
 from sqlalchemy import create_engine, text
 from sqlalchemy.exc import OperationalError
+from sqlalchemy.orm import Session
 
 from app.core.config import PROJECT_ROOT, get_settings
+from app.etl.loader import load
 from app.synthetic.simulator import generate
 
 
@@ -34,3 +36,16 @@ def db_engine():
     command.upgrade(config, "head")
     yield engine
     engine.dispose()
+
+
+@pytest.fixture(scope="session")
+def loaded_engine(db_engine, dataset):
+    """Test database containing the default dataset."""
+    load(db_engine, dataset)
+    return db_engine
+
+
+@pytest.fixture
+def session(loaded_engine):
+    with Session(loaded_engine) as session:
+        yield session
