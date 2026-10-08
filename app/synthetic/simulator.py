@@ -929,7 +929,7 @@ class Simulation:
         manager = self.people.get(state.row["manager_id"])
         if manager is not None and manager.account is None:
             return "RESOURCE_NOT_FOUND", "Manager's identity account was not found."
-        if failures.roll_sync_timeout(self.rng, state.row["location"]):
+        if failures.roll_sync_timeout(self.rng):
             return "TIMEOUT", "Directory update timed out after 30 seconds."
         return None
 
@@ -1075,7 +1075,7 @@ class Simulation:
             return "skipped", None, "Account was already enabled", 1
 
         failure = failures.roll_action_failure(
-            self.rng, action_type, action.target, state.row["location"],
+            self.rng, action_type, action.target,
             license_shortage=self._license_shortage(when.date()),
         )
         error_type = failure[0] if failure else None

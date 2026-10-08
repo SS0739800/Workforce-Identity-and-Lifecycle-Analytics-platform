@@ -72,9 +72,9 @@ The sync is modelled on a nightly job that reads a full HR export:
 ### Workforce
 - 875 employees at the start, structured as CEO → department heads → first-line managers
   (about 1 per 12 people) → individual contributors. Production is the largest department.
-- With seed 42: 132 hires (114 regular plus 18 summer interns), 3 duplicate HR records,
-  115 terminations within the year and 3 future-dated terminations still pending at year end,
-  for 1,010 employee records in total.
+- With seed 42: 132 hires (114 regular plus 18 summer interns), 8 duplicate HR records,
+  113 terminations within the year and 4 offboardings still pending at year end,
+  for 1,015 employee records in total.
 - Hiring peaks in **January–February** (new budget year) and **June–July** (summer production
   ramp-up; Production hiring is weighted ×1.8). December is quiet.
 - Terminations peak in **January** (after year-end bonuses) and **August** (the intern program ends 21 Aug).
@@ -99,8 +99,7 @@ The sync is modelled on a nightly job that reads a full HR export:
 | remove_group_membership | 2.5% | TIMEOUT, PERMISSION_ERROR, RESOURCE_NOT_FOUND | |
 | other actions | 1–2% | various | |
 
-- Requests for employees at the **Monterrey Plant** fail 1.8× as often (assumed slower WAN link).
-- Sync record updates time out 1% of the time (more at Monterrey).
+- Sync record updates time out 1% of the time.
 - Directory outages on 18 Nov 2025, 10 Feb 2026 and 23 Jun 2026 fail the nightly run; an
   analyst re-runs it at 07:45. Outage failures don't count against a record's retry limit.
 
@@ -125,8 +124,8 @@ of the simulation, not something the data discovered.
 | Stale group / role / license, active account after termination | Offboarding step failed and was not re-run | — |
 
 65% of HR-record defects are corrected by HR 2–25 days later (the change is logged with
-source `data_correction`). The rest stay open. With seed 42, 102 issues are detected
-during the year and 26 employees (2.6%) still have an open issue at year end.
+source `data_correction`). The rest stay open. With seed 42, 95 issues are detected
+during the year and 33 employees (3.3%) still have an open issue at year end.
 
 ## Known simplifications
 

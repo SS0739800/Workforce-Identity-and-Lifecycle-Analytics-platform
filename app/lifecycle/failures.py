@@ -82,10 +82,6 @@ ACTION_FAILURE_PROFILES: dict[str, FailureProfile] = {
 PRIVILEGED_ROLE_REMOVAL_MULTIPLIER = 3.0
 # During a license shortage, assignments fail far more often for a single, specific reason.
 LICENSE_SHORTAGE_FAILURE_RATE = 0.35
-# Requests to the Monterrey site cross a slower WAN link, so timeouts are more frequent there.
-SLOW_SITE = "Monterrey Plant"
-SLOW_SITE_MULTIPLIER = 1.8
-
 SYNC_RECORD_TIMEOUT_RATE = 0.01
 
 
@@ -93,7 +89,6 @@ def roll_action_failure(
     rng: random.Random,
     action_type: str,
     target: str | None,
-    location: str | None,
     license_shortage: bool = False,
 ) -> tuple[str, str] | None:
     """Return (error_type, error_message) if the action fails, otherwise None."""
@@ -105,8 +100,6 @@ def roll_action_failure(
     rate = profile.rate
     if action_type == "remove_role" and target == PRIVILEGED_ROLE:
         rate *= PRIVILEGED_ROLE_REMOVAL_MULTIPLIER
-    if location == SLOW_SITE:
-        rate *= SLOW_SITE_MULTIPLIER
 
     if rng.random() >= rate:
         return None
@@ -115,11 +108,8 @@ def roll_action_failure(
     return mode.error_type, mode.message.format(target=target)
 
 
-def roll_sync_timeout(rng: random.Random, location: str | None) -> bool:
-    rate = SYNC_RECORD_TIMEOUT_RATE
-    if location == SLOW_SITE:
-        rate *= SLOW_SITE_MULTIPLIER * 2
-    return rng.random() < rate
+def roll_sync_timeout(rng: random.Random) -> bool:
+    return rng.random() < SYNC_RECORD_TIMEOUT_RATE
 
 
 def action_duration_seconds(rng: random.Random, action_type: str, error_type: str | None) -> int:
