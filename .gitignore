@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+
+# Local configuration and secrets
+.env
+
+# Generated data (reproducible with scripts/generate_data.py)
+data/
+
+# Editors / OS
+.vscode/
+.idea/
+Thumbs.db
+.DS_Store
+
+# Never commit scripts from previous employers
+*.ps1
