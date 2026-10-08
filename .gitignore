@@ -18,3 +18,8 @@ Thumbs.db
 
 # Never commit scripts from previous employers
 *.ps1
+
+# Power BI local files (the .pbip project itself is committed)
+powerbi/**/.pbi/localSettings.json
+powerbi/**/.pbi/cache.abf
+*.pbix.bak

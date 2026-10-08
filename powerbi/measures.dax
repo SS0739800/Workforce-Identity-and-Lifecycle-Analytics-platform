@@ -1,0 +1,166 @@
+// DAX measures for the Workforce Identity & Lifecycle report.
+//
+// Create these in a table called "Measures" (Home > Enter data > an empty table named Measures),
+// one measure per block. The comment above each block is the display folder.
+//
+// Every measure is a count, sum or ratio over one reporting view, so it can be checked against
+// SQL: the same formulas are computed in tests/test_reporting.py and compared with the API's
+// analytics queries, and powerbi/validation.sql prints the totals the report should show.
+//
+// Rates return fractions (0.25); format them as percentages in the model.
+
+
+// ---- Workforce ------------------------------------------------------------------------------
+
+Total Employees =
+COUNTROWS ( dim_employee )
+
+Active Employees =
+CALCULATE ( [Total Employees], dim_employee[employment_status] = "active" )
+
+Active Identities =
+CALCULATE ( [Total Employees], dim_employee[account_status] = "active" )
+
+// Terminated employees who still have an enabled account or any group, role or license.
+Leavers With Access Remaining =
+CALCULATE ( [Total Employees], dim_employee[has_access_after_termination] = TRUE () )
+
+
+// ---- Synchronization ------------------------------------------------------------------------
+
+Sync Runs =
+COUNTROWS ( fact_sync_runs )
+
+// A failed run is a file-level or directory failure, not a run with some failed records.
+Failed Sync Runs =
+CALCULATE ( [Sync Runs], fact_sync_runs[status] = "failed" )
+
+Sync Run Success Rate =
+DIVIDE ( [Sync Runs] - [Failed Sync Runs], [Sync Runs] )
+
+// Every record in the HR export, on every run. Not filtered by department: runs have no employee.
+Records Evaluated =
+SUM ( fact_sync_runs[total_records] )
+
+// Records the sync actually tried to update (changed records and new hires).
+Sync Record Attempts =
+COUNTROWS ( fact_sync_records )
+
+Sync Records Updated =
+CALCULATE ( [Sync Record Attempts], fact_sync_records[status] = "success" )
+
+Sync Records Failed =
+CALCULATE ( [Sync Record Attempts], fact_sync_records[status] = "failed" )
+
+Sync Success Rate =
+DIVIDE ( [Sync Records Updated], [Sync Record Attempts] )
+
+Sync Failure Rate =
+DIVIDE ( [Sync Records Failed], [Sync Record Attempts] )
+
+Avg Sync Run Duration (s) =
+AVERAGE ( fact_sync_runs[duration_seconds] )
+
+
+// ---- Lifecycle workflows -----------------------------------------------------------------------
+
+Workflow Count =
+COUNTROWS ( fact_workflow_runs )
+
+Completed Workflows =
+CALCULATE ( [Workflow Count], fact_workflow_runs[status] = "completed" )
+
+Failed Workflows =
+CALCULATE ( [Workflow Count], fact_workflow_runs[status] = "failed" )
+
+// Queued for a future-dated termination; not run yet.
+Pending Workflows =
+CALCULATE ( [Workflow Count], fact_workflow_runs[status] = "pending" )
+
+// Pending workflows have not run, so they are left out of both rates.
+Workflow Success Rate =
+DIVIDE ( [Completed Workflows], [Completed Workflows] + [Failed Workflows] )
+
+Workflow Failure Rate =
+DIVIDE ( [Failed Workflows], [Completed Workflows] + [Failed Workflows] )
+
+Service Desk Reruns =
+CALCULATE ( [Workflow Count], fact_workflow_runs[is_rerun] = TRUE () )
+
+// Blank durations (pending workflows) are ignored by AVERAGE.
+Avg Workflow Duration (s) =
+AVERAGE ( fact_workflow_runs[duration_seconds] )
+
+// Offboardings that removed everything on the first attempt, without a service-desk re-run.
+First-Time Offboarding Success Rate =
+VAR FirstAttempts =
+    CALCULATE (
+        [Workflow Count],
+        fact_workflow_runs[workflow_type] = "offboarding",
+        fact_workflow_runs[is_rerun] = FALSE (),
+        fact_workflow_runs[status] IN { "completed", "failed" }
+    )
+VAR Succeeded =
+    CALCULATE (
+        [Workflow Count],
+        fact_workflow_runs[workflow_type] = "offboarding",
+        fact_workflow_runs[is_rerun] = FALSE (),
+        fact_workflow_runs[status] = "completed"
+    )
+RETURN
+    DIVIDE ( Succeeded, FirstAttempts )
+
+// Skipped actions (already disabled, or not attempted after create_account failed) are not attempts.
+Action Attempts =
+CALCULATE ( COUNTROWS ( fact_workflow_actions ), fact_workflow_actions[is_attempt] = TRUE () )
+
+Failed Actions =
+CALCULATE ( COUNTROWS ( fact_workflow_actions ), fact_workflow_actions[status] = "failed" )
+
+Action Failure Rate =
+DIVIDE ( [Failed Actions], [Action Attempts] )
+
+
+// ---- Data quality ------------------------------------------------------------------------------
+
+// Filtered by the date an issue was DETECTED (the active relationship).
+DQ Issues =
+COUNTROWS ( fact_dq_issues )
+
+// Issues detected in the selected period that are still open.
+Open DQ Issues =
+CALCULATE ( [DQ Issues], fact_dq_issues[status] = "open" )
+
+Resolved DQ Issues =
+CALCULATE ( [DQ Issues], fact_dq_issues[status] = "resolved" )
+
+Open Critical DQ Issues =
+CALCULATE ( [Open DQ Issues], fact_dq_issues[severity] = "critical" )
+
+Employees With Open Issues =
+CALCULATE ( DISTINCTCOUNT ( fact_dq_issues[employee_key] ), fact_dq_issues[status] = "open" )
+
+// Resolved issues have a value; open issues are blank and ignored.
+Avg Days to Resolve =
+AVERAGE ( fact_dq_issues[days_to_resolve] )
+
+// Uses the inactive resolved_date relationship, so "March" means "resolved in March".
+// Put next to [DQ Issues] on a monthly chart to compare issues found vs issues fixed.
+Issues Resolved (by resolved date) =
+CALCULATE (
+    COUNTROWS ( fact_dq_issues ),
+    USERELATIONSHIP ( fact_dq_issues[resolved_date], dim_date[date] ),
+    NOT ISBLANK ( fact_dq_issues[resolved_date] )
+)
+
+
+// ---- Attribute changes -------------------------------------------------------------------------
+
+Attribute Changes =
+COUNTROWS ( fact_attribute_changes )
+
+Data Corrections =
+CALCULATE ( [Attribute Changes], fact_attribute_changes[is_correction] = TRUE () )
+
+Correction Share =
+DIVIDE ( [Data Corrections], [Attribute Changes] )

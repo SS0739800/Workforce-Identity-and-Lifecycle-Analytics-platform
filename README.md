@@ -12,8 +12,9 @@ infrastructure or data is used.
 
 > **Status: work in progress.** Phases 1–3 are in place: database, synthetic data, loading,
 > SQL analytics, a REST API, and lifecycle operations (sync, workflows, data-quality scan) that run
-> against the database. Power BI, Streamlit, AI and AWS deployment come in later phases and are
-> not implemented yet.
+> against the database. For Power BI (Phase 4), the reporting views, Power Query scripts, DAX
+> measures and report design are in place; the report file itself is built in Power BI Desktop
+> and is not in the repository yet. Streamlit, AI and AWS deployment are not implemented yet.
 
 ## What exists so far
 
@@ -24,6 +25,9 @@ infrastructure or data is used.
 - 27 analytical SQL queries covering sync reliability, attribute changes, workflow failures,
   offboarding and access cleanup, and data quality. See [docs/analytics.md](docs/analytics.md).
 - A FastAPI service for employee investigation and analytics.
+- A `reporting` schema of views for Power BI (date, employee and workflow-type dimensions and six
+  fact views), a read-only database login for it, and the Power Query, DAX and page design to
+  build the report. See [powerbi/README.md](powerbi/README.md).
 - Lifecycle operations through the API: enter HR changes, run the sync, onboard, offboard,
   handle leave and return, re-run failed workflows, and run the data-quality scan. The simulator
   and the API share the same rules in `app/lifecycle/`. See [docs/operations.md](docs/operations.md).
@@ -77,7 +81,8 @@ app/
   api/         FastAPI routers
   main.py      FastAPI application
 alembic/       migrations
-scripts/       generate_data.py, load_data.py
+powerbi/       Power Query scripts, DAX measures, report design, validation query
+scripts/       generate_data.py, load_data.py, create_reporting_user.py
 tests/
 docs/
 ```
