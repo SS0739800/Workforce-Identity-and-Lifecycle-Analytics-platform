@@ -198,7 +198,7 @@ def test_repeated_operational_failures(session, dataset):
 def test_offboarding_monthly_adds_up(session, dataset):
     started = [r for r in dataset["workflow_runs"] if r["workflow_type"] == "offboarding" and r["started_at"]]
     rows = run_query(session, "offboarding_monthly")
-    assert sum(r["offboardings"] for r in rows) == sum(r["initiated_by"] == "nightly_sync" for r in started)
+    assert sum(r["offboardings"] for r in rows) == sum(r["initiated_by"] != "service_desk" for r in started)
     assert sum(r["service_desk_reruns"] for r in rows) == sum(r["initiated_by"] == "service_desk" for r in started)
 
 

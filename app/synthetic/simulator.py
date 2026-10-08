@@ -18,24 +18,34 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import date, datetime, time, timedelta, timezone
 
-from app.lifecycle import failures
+from app.lifecycle.executor import execute_plan
 from app.lifecycle.reference import (
     CEO_TITLE,
     DEPARTMENTS,
     EMAIL_DOMAIN,
     Entitlements,
-    entitlements_for,
+    access_for_employee,
     valid_departments,
 )
-from app.lifecycle.validation import check_hr_record, check_identity_state, find_duplicates
+from app.lifecycle.sync import (
+    due_workflows,
+    in_hr_export,
+    needs_attribute_sync,
+    sync_record_error,
+)
+from app.lifecycle.validation import AccessSnapshot, find_duplicates, find_issues, issue_changes
 from app.lifecycle.workflows import (
-    BLOCKING_ACTIONS,
+    ASSIGNMENT_ACTIONS,
     IdentityState,
     PlannedAction,
+    access_changes,
+    can_rerun,
     plan_leave,
     plan_offboarding,
     plan_onboarding,
+    plan_rerun,
     plan_return_from_leave,
+    username_from_email,
 )
 from app.synthetic import assumptions as A
 from app.synthetic.names import FIRST_NAMES, LAST_NAMES
@@ -55,9 +65,6 @@ TABLES = (
     "audit_events",
 )
 
-# HR attributes the sync pushes to the identity account.
-SYNCED_FIELDS = ("employee_id", "email", "department", "job_title", "manager_id", "location", "employment_type")
-
 MISSPELLED_LOCATIONS = ("Monterey Plant", "Greenville", "Ft Wayne DC")
 
 # kind -> (table, name column, attribute on EmployeeState)
@@ -66,15 +73,6 @@ ASSIGNMENT_KINDS = {
     "role": ("role_assignments", "role_name", "roles"),
     "license": ("license_assignments", "license_name", "licenses"),
 }
-ACTION_ASSIGNMENTS = {
-    "add_group_membership": ("group", True),
-    "remove_group_membership": ("group", False),
-    "assign_role": ("role", True),
-    "remove_role": ("role", False),
-    "assign_license": ("license", True),
-    "remove_license": ("license", False),
-}
-
 TITLE_LADDERS = {
     title: ladder
     for dept in DEPARTMENTS.values()
@@ -141,8 +139,6 @@ class EmployeeState:
     groups: dict[str, dict] = field(default_factory=dict)
     roles: dict[str, dict] = field(default_factory=dict)
     licenses: dict[str, dict] = field(default_factory=dict)
-    # Attribute values last pushed to the identity account.
-    synced: tuple | None = None
     # Consecutive failed sync attempts since the HR record last changed.
     sync_attempts: int = 0
     onboarding_requested: bool = False
@@ -166,6 +162,20 @@ class EmployeeState:
             roles=tuple(self.roles),
             licenses=tuple(self.licenses),
         )
+
+
+class SimulatedIdentity:
+    """The executor's view of one employee's identity data held in memory."""
+
+    def __init__(self, simulation: "Simulation", state: EmployeeState):
+        self.simulation = simulation
+        self.state = state
+
+    def account_status(self) -> str | None:
+        return self.state.account["account_status"] if self.state.account else None
+
+    def apply(self, action: PlannedAction, when: datetime) -> None:
+        self.simulation._apply_action(self.state, action, when)
 
 
 class Simulation:
@@ -323,13 +333,7 @@ class Simulation:
         return self.ceo_id
 
     def _desired_access(self, state: EmployeeState) -> Entitlements:
-        row = state.row
-        return entitlements_for(
-            row["department"], row["location"], row["job_title"], row["employment_type"], state.is_manager
-        )
-
-    def _synced_values(self, state: EmployeeState) -> tuple:
-        return tuple(state.row[name] for name in SYNCED_FIELDS)
+        return access_for_employee(state.row)
 
     def _change(self, state: EmployeeState, attribute: str, value, when: datetime, source: str = "hr_system") -> None:
         """Change an HR attribute and record it in attribute_change_logs."""
@@ -415,7 +419,6 @@ class Simulation:
         dayton = [s for s in self.people.values() if s.row["location"] == "Dayton Plant" and not s.is_manager]
         for state in rng.sample(dayton, A.LEGACY_LOCATION_DEFECTS):
             state.row["location"] = A.LEGACY_LOCATION_VALUE
-            state.synced = self._synced_values(state)
             self._maybe_schedule_correction(
                 state, "location", "Dayton Plant", A.LEGACY_LOCATION_VALUE, start, A.LEGACY_CORRECTION_DELAY_DAYS
             )
@@ -434,7 +437,6 @@ class Simulation:
             "last_sync_at": at(A.SIMULATION_START - timedelta(days=1), 2),
         })
         state.onboarding_requested = True
-        state.synced = self._synced_values(state)
         desired = self._desired_access(state)
         for kind, names in (("group", desired.groups), ("role", desired.roles), ("license", desired.licenses)):
             for name in names:
@@ -841,7 +843,7 @@ class Simulation:
             return
 
         directory_down = scheduled and day in A.DIRECTORY_OUTAGE_DATES
-        export = self._hr_export(start)
+        export = [s for s in self.people.values() if in_hr_export(s.row, start)]
         duplicates = find_duplicates([s.row for s in export])
         clock = start + timedelta(seconds=5)
         successful = failed = 0
@@ -852,7 +854,12 @@ class Simulation:
             if directory_down:
                 error = ("DEPENDENCY_ERROR", "Directory service unavailable: connection refused")
             else:
-                error = self._sync_record_error(state, day, duplicates)
+                manager = self.people.get(state.row["manager_id"])
+                error = sync_record_error(
+                    state.row, day, duplicates.get(state.id),
+                    manager_has_no_account=manager is not None and manager.account is None,
+                    rng=self.rng,
+                )
 
             record_start = clock
             if error is None:
@@ -891,47 +898,24 @@ class Simulation:
             return
         if failed:
             run["status"] = "completed_with_errors"
-        self._launch_lifecycle_workflows(run["completed_at"] + timedelta(seconds=5))
+        initiated_by = "nightly_sync" if scheduled else "manual_sync"
+        self._launch_lifecycle_workflows(run["completed_at"] + timedelta(seconds=5), initiated_by)
 
     def _fail_run(self, run: dict, start: datetime, message: str) -> None:
         run["status"] = "failed"
         run["error_message"] = message
         run["completed_at"] = start + timedelta(seconds=2)
 
-    def _hr_export(self, when: datetime) -> list[EmployeeState]:
-        """The HR file: everyone not terminated, plus recent leavers."""
-        cutoff = when.date() - timedelta(days=A.EXPORT_TERMINATED_RETENTION_DAYS)
-        export = []
-        for state in self.people.values():
-            row = state.row
-            if row["created_at"] > when:
-                continue
-            if not state.active and row["termination_date"] and row["termination_date"] < cutoff:
-                continue
-            export.append(state)
-        return export
-
     def _needs_sync(self, state: EmployeeState) -> bool:
-        if not state.active:
-            return False  # terminated records are handled by offboarding, not the attribute sync
-        if state.sync_attempts >= A.SYNC_MAX_ATTEMPTS:
-            return False  # held until the HR record changes
-        if state.account is None:
-            return not state.onboarding_requested
-        return self._synced_values(state) != state.synced
-
-    def _sync_record_error(self, state: EmployeeState, day: date, duplicates: dict[int, int]) -> tuple[str, str] | None:
-        blocking = [
-            f for f in check_hr_record(state.row, day, duplicates.get(state.id)) if f.blocks_sync
-        ]
-        if blocking:
-            return blocking[0].error_type, " ".join(f.description for f in blocking)
-        manager = self.people.get(state.row["manager_id"])
-        if manager is not None and manager.account is None:
-            return "RESOURCE_NOT_FOUND", "Manager's identity account was not found."
-        if failures.roll_sync_timeout(self.rng):
-            return "TIMEOUT", "Directory update timed out after 30 seconds."
-        return None
+        return needs_attribute_sync(
+            employment_status=state.row["employment_status"],
+            has_account=state.account is not None,
+            onboarding_started=state.onboarding_requested,
+            changed_since_last_sync=(
+                state.account is not None and state.row["updated_at"] > state.account["last_sync_at"]
+            ),
+            failed_attempts=state.sync_attempts,
+        )
 
     def _apply_sync(self, state: EmployeeState, when: datetime) -> None:
         if state.account is None:
@@ -939,70 +923,69 @@ class Simulation:
             state.onboarding_requested = True
             self.onboarding_queue.append(state)
             return
-        state.synced = self._synced_values(state)
         state.account["last_sync_at"] = when
         self._audit(state, "attributes_synced", "Identity attributes updated from HR record", when, "identity_sync")
         self._reconcile_access(state, when)
 
     def _reconcile_access(self, state: EmployeeState, when: datetime) -> None:
         """Bring birthright access in line with the HR record after a department, site or type change."""
-        desired = self._desired_access(state)
-        for kind, wanted in (("group", desired.groups), ("role", desired.roles), ("license", desired.licenses)):
-            current = getattr(state, ASSIGNMENT_KINDS[kind][2])
-            for name in wanted:
-                if name not in current:
-                    self._assign(state, kind, name, when, audit_source="identity_sync")
-            for name in list(current):
-                if name not in wanted:
-                    self._unassign(state, kind, name, when, audit_source="identity_sync")
+        for kind, name, adding in access_changes(state.identity(), self._desired_access(state)):
+            if adding:
+                self._assign(state, kind, name, when, audit_source="identity_sync")
+            else:
+                self._unassign(state, kind, name, when, audit_source="identity_sync")
 
     # -- lifecycle workflows -------------------------------------------------------------
 
-    def _launch_lifecycle_workflows(self, clock: datetime) -> None:
+    def _launch_lifecycle_workflows(self, clock: datetime, initiated_by: str) -> None:
         for state in self.onboarding_queue:
             plan = plan_onboarding(state.identity(), self._desired_access(state))
-            clock = self._execute_workflow(state, "onboarding", plan, clock, "nightly_sync")
+            clock = self._execute_workflow(state, "onboarding", plan, clock, initiated_by)
         self.onboarding_queue = []
 
         for state in self.people.values():
-            row = state.row
-            if state.is_duplicate or row["created_at"] > clock:
+            if state.is_duplicate or state.row["created_at"] > clock:
                 continue
+            due = due_workflows(
+                state.row,
+                has_account=state.account is not None,
+                already_offboarded=state.offboarded,
+                has_pending_offboarding=state.offboarding_run is not None,
+                leave_applied=state.leave_applied,
+                today=clock.date(),
+            )
+            for work in due:
+                clock = self._start_lifecycle_work(state, work, clock, initiated_by)
 
-            if not state.active:
-                if not state.offboarded:
-                    plan = plan_offboarding(state.identity())
-                    if plan:
-                        clock = self._execute_workflow(
-                            state, "offboarding", plan, clock, "nightly_sync", run=state.offboarding_run
-                        )
-                    state.offboarded = True
-                    state.leave_applied = False
-                continue
-
-            termination_date = row["termination_date"]
-            if termination_date and termination_date >= clock.date() and state.offboarding_run is None and state.account:
-                # Future-dated termination: queue offboarding so it shows up as pending work.
-                state.offboarding_run = self._add("workflow_runs", {
-                    "employee_id": state.id,
-                    "workflow_type": "offboarding",
-                    "requested_at": clock,
-                    "started_at": None,
-                    "completed_at": None,
-                    "status": "pending",
-                    "initiated_by": "nightly_sync",
-                })
-
-            if row["leave_status"] == "on_leave" and not state.leave_applied:
-                state.leave_applied = True
-                plan = plan_leave(state.identity())
-                if plan:
-                    clock = self._execute_workflow(state, "leave", plan, clock, "nightly_sync")
-            elif row["leave_status"] == "none" and state.leave_applied:
-                state.leave_applied = False
-                plan = plan_return_from_leave(state.identity())
-                if plan:
-                    clock = self._execute_workflow(state, "return_from_leave", plan, clock, "nightly_sync")
+    def _start_lifecycle_work(self, state: EmployeeState, work: str, clock: datetime, initiated_by: str) -> datetime:
+        if work == "offboarding":
+            plan = plan_offboarding(state.identity())
+            if plan:
+                clock = self._execute_workflow(state, "offboarding", plan, clock, initiated_by, run=state.offboarding_run)
+            state.offboarded = True
+            state.leave_applied = False
+        elif work == "queue_offboarding":
+            # Future-dated termination: queue offboarding so it shows up as pending work.
+            state.offboarding_run = self._add("workflow_runs", {
+                "employee_id": state.id,
+                "workflow_type": "offboarding",
+                "requested_at": clock,
+                "started_at": None,
+                "completed_at": None,
+                "status": "pending",
+                "initiated_by": initiated_by,
+            })
+        elif work == "leave":
+            state.leave_applied = True
+            plan = plan_leave(state.identity())
+            if plan:
+                clock = self._execute_workflow(state, "leave", plan, clock, initiated_by)
+        elif work == "return_from_leave":
+            state.leave_applied = False
+            plan = plan_return_from_leave(state.identity())
+            if plan:
+                clock = self._execute_workflow(state, "return_from_leave", plan, clock, initiated_by)
+        return clock
 
     def _execute_workflow(
         self,
@@ -1025,83 +1008,43 @@ class Simulation:
                 "initiated_by": initiated_by,
             })
         run["started_at"] = when
-        clock = when
-        to_retry: list[PlannedAction] = []
-        any_failed = False
-        blocked_by: str | None = None
-
-        for action in plan:
-            if blocked_by:
-                status, error_type, message, seconds = "skipped", None, f"Not attempted because {blocked_by} failed", 0
-            else:
-                status, error_type, message, seconds = self._perform_action(state, action, clock)
-
+        result = execute_plan(
+            plan, SimulatedIdentity(self, state), when, self.rng,
+            license_shortage=self._license_shortage(when.date()),
+        )
+        for outcome in result.outcomes:
             self._add("workflow_actions", {
                 "workflow_run_id": run["id"],
-                "action_type": action.action_type,
-                "target_name": action.target,
-                "status": status,
-                "started_at": clock,
-                "completed_at": clock + timedelta(seconds=seconds),
-                "error_type": error_type,
-                "error_message": message,
+                "action_type": outcome.action.action_type,
+                "target_name": outcome.action.target,
+                "status": outcome.status,
+                "started_at": outcome.started_at,
+                "completed_at": outcome.completed_at,
+                "error_type": outcome.error_type,
+                "error_message": outcome.error_message,
             })
-            clock += timedelta(seconds=seconds + self.rng.randint(0, 2))
 
-            if status == "failed":
-                any_failed = True
-                to_retry.append(action)
-                if action.action_type in BLOCKING_ACTIONS:
-                    blocked_by = action.action_type
-            elif blocked_by:
-                to_retry.append(action)
-
-        run["completed_at"] = clock
-        run["status"] = "failed" if any_failed else "completed"
-        if any_failed and initiated_by != "service_desk":
-            self._maybe_schedule_rerun(state, workflow_type, to_retry, clock)
-        return clock + timedelta(seconds=self.rng.randint(2, 10))
+        run["completed_at"] = result.finished_at
+        run["status"] = result.status
+        if result.status == "failed" and initiated_by != "service_desk":
+            self._maybe_schedule_rerun(state, workflow_type, result.failed_actions, result.finished_at)
+        return result.finished_at + timedelta(seconds=self.rng.randint(2, 10))
 
     def _license_shortage(self, day: date) -> bool:
         return any(start <= day <= end for start, end in A.LICENSE_SHORTAGE_PERIODS)
-
-    def _perform_action(self, state: EmployeeState, action: PlannedAction, when: datetime) -> tuple:
-        """Returns (status, error_type, error_message, duration_seconds)."""
-        action_type = action.action_type
-        account = state.account
-        if action_type == "disable_account" and account["account_status"] == "disabled":
-            return "skipped", "ALREADY_DISABLED", "Account was already disabled", 1
-        if action_type == "enable_account" and account["account_status"] == "active":
-            return "skipped", None, "Account was already enabled", 1
-
-        failure = failures.roll_action_failure(
-            self.rng, action_type, action.target,
-            license_shortage=self._license_shortage(when.date()),
-        )
-        error_type = failure[0] if failure else None
-        seconds = failures.action_duration_seconds(self.rng, action_type, error_type)
-        if failure:
-            return "failed", failure[0], failure[1], seconds
-
-        self._apply_action(state, action, when + timedelta(seconds=seconds))
-        return "success", None, None, seconds
 
     def _apply_action(self, state: EmployeeState, action: PlannedAction, when: datetime) -> None:
         action_type = action.action_type
         source = "workflow_engine"
 
-        if action_type in ACTION_ASSIGNMENTS:
-            kind, adding = ACTION_ASSIGNMENTS[action_type]
+        if action_type in ASSIGNMENT_ACTIONS:
+            kind, adding = ASSIGNMENT_ACTIONS[action_type]
             if adding:
                 self._assign(state, kind, action.target, when, audit_source=source)
             else:
                 self._unassign(state, kind, action.target, when, audit_source=source)
         elif action_type == "create_account":
-            username = state.row["email"].split("@")[0]
-            base, suffix = username, 2
-            while username in self.used_usernames:
-                username = f"{base}{suffix}"
-                suffix += 1
+            username = username_from_email(state.row["email"], is_taken=self.used_usernames.__contains__)
             self.used_usernames.add(username)
             state.account = self._add("identity_accounts", {
                 "employee_id": state.id,
@@ -1111,7 +1054,6 @@ class Simulation:
                 "account_disabled_at": None,
                 "last_sync_at": when,
             })
-            state.synced = self._synced_values(state)
             self._audit(state, "account_created", f"Account '{username}' created", when, source)
         elif action_type == "enable_account":
             state.account["account_status"] = "active"
@@ -1163,63 +1105,28 @@ class Simulation:
         """Service desk re-runs the outstanding steps of a failed workflow."""
         state = self.people[payload["employee"]]
         workflow_type = payload["workflow_type"]
-        leave_status = state.row["leave_status"]
-
-        if workflow_type != "offboarding" and not state.active:
+        if not can_rerun(workflow_type, state.row["employment_status"], state.row["leave_status"]):
             return
-        if workflow_type == "leave" and leave_status != "on_leave":
-            return
-        if workflow_type == "return_from_leave" and leave_status != "none":
-            return
-
-        if workflow_type == "onboarding":
-            plan = plan_onboarding(state.identity(), self._desired_access(state))
-        else:
-            plan = [action for action in payload["actions"] if self._still_needed(state, action)]
+        plan = plan_rerun(workflow_type, payload["actions"], state.identity(), self._desired_access(state))
         if plan:
             self._execute_workflow(state, workflow_type, plan, when, "service_desk")
-
-    def _still_needed(self, state: EmployeeState, action: PlannedAction) -> bool:
-        account_status = state.account["account_status"] if state.account else None
-        action_type = action.action_type
-        if action_type == "create_account":
-            return account_status is None
-        if action_type == "enable_account":
-            return account_status == "disabled"
-        if action_type == "disable_account":
-            return account_status == "active"
-        if action_type in ACTION_ASSIGNMENTS:
-            kind, adding = ACTION_ASSIGNMENTS[action_type]
-            assigned = action.target in getattr(state, ASSIGNMENT_KINDS[kind][2])
-            return not assigned if adding else assigned
-        return True
 
     # -- data-quality scan ----------------------------------------------------------------
 
     def _scan_data_quality(self, when: datetime) -> None:
         """Run every rule against every record; open new issues and resolve ones that cleared."""
-        day = when.date()
         existing = [s for s in self.people.values() if s.row["created_at"] <= when]
-        duplicates = find_duplicates([s.row for s in existing])
-
-        found = {}
-        for state in existing:
-            findings = check_hr_record(state.row, day, duplicates.get(state.id))
-            findings += check_identity_state(
-                state.row,
-                when,
-                state.account["account_status"] if state.account else None,
-                len(state.groups),
-                len(state.roles),
-                len(state.licenses),
-                is_duplicate=state.id in duplicates,
+        access = {
+            s.id: AccessSnapshot(
+                s.account["account_status"] if s.account else None, len(s.groups), len(s.roles), len(s.licenses)
             )
-            for finding in findings:
-                found[(state.id, finding.issue_type)] = finding
+            for s in existing
+        }
+        found = find_issues([s.row for s in existing], access, when)
+        to_open, to_resolve = issue_changes(list(self.open_issues), found)
 
-        for key, finding in found.items():
-            if key in self.open_issues:
-                continue
+        for key in to_open:
+            finding = found[key]
             self.open_issues[key] = self._add("data_quality_issues", {
                 "employee_id": key[0],
                 "issue_type": finding.issue_type,
@@ -1231,11 +1138,10 @@ class Simulation:
                 "status": "open",
             })
 
-        for key in list(self.open_issues):
-            if key not in found:
-                issue = self.open_issues.pop(key)
-                issue["resolved_at"] = when
-                issue["status"] = "resolved"
+        for key in to_resolve:
+            issue = self.open_issues.pop(key)
+            issue["resolved_at"] = when
+            issue["status"] = "resolved"
 
 
 def generate(seed: int = A.DEFAULT_SEED) -> dict[str, list[dict]]:

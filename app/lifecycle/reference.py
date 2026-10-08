@@ -4,6 +4,7 @@ Everything here is invented. Group, role and license names are generic so the
 project does not imply any real directory, tenant or product configuration.
 """
 
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from datetime import date
 
@@ -268,3 +269,18 @@ def entitlements_for(
         licenses.extend(dept.licenses)
 
     return Entitlements(tuple(dict.fromkeys(groups)), tuple(roles), tuple(licenses))
+
+
+# Department heads and first-line managers are recognised by title (HR has no "is manager" flag).
+MANAGER_TITLES = {d.head_title for d in DEPARTMENTS.values()} | {d.manager_title for d in DEPARTMENTS.values()}
+
+
+def access_for_employee(employee: Mapping) -> Entitlements:
+    """Birthright access for an HR record."""
+    return entitlements_for(
+        employee["department"],
+        employee["location"],
+        employee["job_title"],
+        employee["employment_type"],
+        is_manager=employee["job_title"] in MANAGER_TITLES,
+    )

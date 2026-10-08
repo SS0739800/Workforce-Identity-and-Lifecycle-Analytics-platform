@@ -79,7 +79,7 @@ LOGISTICS_MERGE_LOADED_ON = date(2026, 3, 31)
 LOGISTICS_MERGE_MISSED_SHARE = 0.10
 
 # --- Sync infrastructure incidents ---------------------------------------------------
-SYNC_MAX_ATTEMPTS = 3
+# (The retry limit and export retention are sync rules, defined in app/lifecycle/sync.py.)
 DIRECTORY_OUTAGE_DATES = (date(2025, 11, 18), date(2026, 2, 10), date(2026, 6, 23))
 MISSING_EXPORT_DATES = (date(2026, 1, 5),)
 # After an HR system update, the export arrived without a required column.
@@ -89,8 +89,6 @@ LICENSE_SHORTAGE_PERIODS = (
     (date(2026, 1, 19), date(2026, 2, 13)),
     (date(2026, 6, 1), date(2026, 6, 26)),
 )
-# Terminated employees stay in the HR export for this long.
-EXPORT_TERMINATED_RETENTION_DAYS = 30
 
 # --- Data-quality defects --------------------------------------------------------------
 # Probability that a new hire record is entered with each defect.

@@ -162,3 +162,51 @@ def find_duplicates(employees: list[Mapping]) -> dict[int, int]:
         else:
             first_seen[key] = employee["id"]
     return duplicates
+
+
+# --- the data-quality scan ------------------------------------------------------------------
+
+@dataclass(frozen=True)
+class AccessSnapshot:
+    """An employee's identity account status and how many active assignments they hold."""
+
+    account_status: str | None = None
+    groups: int = 0
+    roles: int = 0
+    licenses: int = 0
+
+
+IssueKey = tuple[int, str]  # (employees.id, issue_type)
+
+
+def find_issues(
+    employees: list[Mapping],
+    access: Mapping[int, AccessSnapshot],
+    as_of: datetime,
+) -> dict[IssueKey, Finding]:
+    """Run every rule against every employee record."""
+    duplicates = find_duplicates(employees)
+    found: dict[IssueKey, Finding] = {}
+    for employee in employees:
+        snapshot = access.get(employee["id"], AccessSnapshot())
+        findings = check_hr_record(employee, as_of.date(), duplicates.get(employee["id"]))
+        findings += check_identity_state(
+            employee,
+            as_of,
+            snapshot.account_status,
+            snapshot.groups,
+            snapshot.roles,
+            snapshot.licenses,
+            is_duplicate=employee["id"] in duplicates,
+        )
+        for finding in findings:
+            found[(employee["id"], finding.issue_type)] = finding
+    return found
+
+
+def issue_changes(open_issues: list[IssueKey], found: Mapping[IssueKey, Finding]) -> tuple[list[IssueKey], list[IssueKey]]:
+    """(issues to open, issues to resolve) when comparing a new scan with the issues already open."""
+    already_open = set(open_issues)
+    to_open = [key for key in found if key not in already_open]
+    to_resolve = [key for key in open_issues if key not in found]
+    return to_open, to_resolve

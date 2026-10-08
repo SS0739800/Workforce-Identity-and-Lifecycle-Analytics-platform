@@ -3,6 +3,7 @@ from datetime import timedelta
 
 from app.etl.loader import validate
 from app.lifecycle.reference import ERROR_TYPES
+from app.lifecycle.sync import MAX_SYNC_ATTEMPTS
 from app.lifecycle.validation import check_hr_record, check_identity_state, find_duplicates
 from app.synthetic import assumptions as A
 from app.synthetic.simulator import at, generate
@@ -161,7 +162,7 @@ def test_failed_records_are_retried_at_most_three_times_per_change(dataset):
         longest = max(longest, streak[employee_id])
         previous[employee_id] = result["started_at"]
 
-    assert longest == A.SYNC_MAX_ATTEMPTS
+    assert longest == MAX_SYNC_ATTEMPTS
 
 
 # --- workflows -------------------------------------------------------------------------

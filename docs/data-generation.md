@@ -37,8 +37,9 @@ The sync is modelled on a nightly job that reads a full HR export:
 
 1. **File checks first.** If the export is missing or lacks a required column, the whole run fails
    with an error message and no records are processed (happens on 2 days).
-2. **Per record.** Records whose attributes already match the identity account are *skipped*.
-   Changed records are validated. A record missing an employee ID, manager or job title, or with an
+2. **Per record.** A record is processed only if the HR record changed since the account's last
+   successful sync (`employees.updated_at > identity_accounts.last_sync_at`); the rest are *skipped*.
+   Processed records are validated. A record missing an employee ID, manager or job title, or with an
    invalid email, unknown department or a duplicate, *fails* with an error type instead of being
    silently skipped.
 3. **Retry limit.** A failing record is retried on at most 3 runs, then held until its HR data
@@ -48,6 +49,10 @@ The sync is modelled on a nightly job that reads a full HR export:
 
 `total_records` on a run is the size of the export. Only records that needed an update get a
 `sync_record_results` row.
+
+These rules live in `app/lifecycle/sync.py`, and workflow execution lives in
+`app/lifecycle/executor.py`. The simulator and the live API both use them, so the generated
+history and anything run through the API follow the same logic.
 
 ### Workflows
 
@@ -72,9 +77,9 @@ The sync is modelled on a nightly job that reads a full HR export:
 ### Workforce
 - 875 employees at the start, structured as CEO → department heads → first-line managers
   (about 1 per 12 people) → individual contributors. Production is the largest department.
-- With seed 42: 132 hires (114 regular plus 18 summer interns), 8 duplicate HR records,
-  113 terminations within the year and 4 offboardings still pending at year end,
-  for 1,015 employee records in total.
+- With seed 42: 132 hires (114 regular plus 18 summer interns), 3 duplicate HR records,
+  115 terminations within the year and 3 offboardings still pending at year end,
+  for 1,010 employee records in total.
 - Hiring peaks in **January–February** (new budget year) and **June–July** (summer production
   ramp-up; Production hiring is weighted ×1.8). December is quiet.
 - Terminations peak in **January** (after year-end bonuses) and **August** (the intern program ends 21 Aug).
@@ -124,8 +129,8 @@ of the simulation, not something the data discovered.
 | Stale group / role / license, active account after termination | Offboarding step failed and was not re-run | — |
 
 65% of HR-record defects are corrected by HR 2–25 days later (the change is logged with
-source `data_correction`). The rest stay open. With seed 42, 95 issues are detected
-during the year and 33 employees (3.3%) still have an open issue at year end.
+source `data_correction`). The rest stay open. With seed 42, 93 issues are detected
+during the year and 29 employees (2.9%) still have an open issue at year end.
 
 ## Known simplifications
 

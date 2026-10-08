@@ -36,7 +36,7 @@ know when writing queries.
 | attribute_change_logs | Changed HR attribute | `source` is `hr_system` or `data_correction`. |
 | sync_runs | Run of the HR → identity sync | `total = successful + failed + skipped`. |
 | sync_record_results | Record the sync tried to update | Unchanged records are counted on the run but get no row here. |
-| workflow_runs | Lifecycle workflow execution | `onboarding`, `offboarding`, `leave`, `return_from_leave`. |
+| workflow_runs | Lifecycle workflow execution | `onboarding`, `offboarding`, `leave`, `return_from_leave`. `initiated_by` is `nightly_sync`, `manual_sync` or `service_desk` (re-run). |
 | workflow_actions | Step in a workflow | `success`, `failed` or `skipped`, with error type and message. |
 | data_quality_issues | Rule violation for one employee | Opened by the daily scan, resolved when the rule stops firing. |
 | audit_events | Identity-side change | Account, access and session changes. |
