@@ -61,6 +61,25 @@ def test_every_workflow_type_is_in_the_workflow_type_dimension(session, view):
     assert missing == 0
 
 
+@pytest.mark.parametrize("view, column", [
+    ("fact_sync_runs", "started_at"),
+    ("fact_workflow_runs", "requested_at"),
+    ("fact_workflow_runs", "started_at"),
+    ("fact_workflow_runs", "completed_at"),
+])
+def test_utc_columns_are_plain_timestamps_with_the_same_instant(session, view, column):
+    data_type = scalar(session, f"""
+        SELECT data_type FROM information_schema.columns
+        WHERE table_schema = 'reporting' AND table_name = '{view}' AND column_name = '{column}_utc'
+    """)
+    assert data_type == "timestamp without time zone"
+    mismatches = scalar(session, f"""
+        SELECT count(*) FROM reporting.{view}
+        WHERE {column}_utc IS DISTINCT FROM ({column} AT TIME ZONE 'UTC')
+    """)
+    assert mismatches == 0
+
+
 def test_date_table_has_one_row_per_day(session):
     assert scalar(session, "SELECT count(*) - count(DISTINCT date) FROM reporting.dim_date") == 0
 

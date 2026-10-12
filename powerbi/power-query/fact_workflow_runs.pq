@@ -3,17 +3,10 @@
 let
     Source = PostgreSQL.Database(DatabaseServer, DatabaseName),
     View = Source{[Schema = "reporting", Item = "fact_workflow_runs"]}[Data],
-    ToUtc = Table.TransformColumns(View, {
-        {"requested_at", DateTimeZone.RemoveZone, type datetime},
-        {"started_at", DateTimeZone.RemoveZone, type datetime},
-        {"completed_at", DateTimeZone.RemoveZone, type datetime}
-    }),
-    Renamed = Table.RenameColumns(ToUtc, {
-        {"requested_at", "requested_at_utc"},
-        {"started_at", "started_at_utc"},
-        {"completed_at", "completed_at_utc"}
-    }),
-    Typed = Table.TransformColumnTypes(Renamed, {
+    // The view provides *_utc columns as plain UTC timestamps; the time-zone-aware
+    // originals don't convert reliably in the connector, so they are dropped here.
+    WithoutZonedTimes = Table.RemoveColumns(View, {"requested_at", "started_at", "completed_at"}),
+    Typed = Table.TransformColumnTypes(WithoutZonedTimes, {
         {"workflow_key", Int64.Type},
         {"employee_key", Int64.Type},
         {"date", type date},
@@ -21,6 +14,9 @@ let
         {"status", type text},
         {"initiated_by", type text},
         {"is_rerun", type logical},
+        {"requested_at_utc", type datetime},
+        {"started_at_utc", type datetime},
+        {"completed_at_utc", type datetime},
         {"duration_seconds", type number},
         {"actions", Int64.Type},
         {"failed_actions", Int64.Type}
