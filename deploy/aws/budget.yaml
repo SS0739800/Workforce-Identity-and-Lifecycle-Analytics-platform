@@ -1,0 +1,39 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: >-
+  Workforce Identity & Lifecycle Analytics: email alert if the account spends anything. Kept separate
+  from the app stack so it stays in place when the environment is deleted.
+
+Parameters:
+  ProjectName:
+    Type: String
+    Default: workforce
+  AlertEmail:
+    Type: String
+    AllowedPattern: "[^@\\s]+@[^@\\s]+\\.[^@\\s]+"
+    Description: Where the alerts go. Passed at deploy time; not stored in the repository.
+
+Resources:
+  # Credits are counted against the cost (the default), so the alert fires on money actually owed,
+  # not on free-tier usage or usage paid for by credits.
+  SpendAlert:
+    Type: AWS::Budgets::Budget
+    Properties:
+      Budget:
+        BudgetName: !Sub "${ProjectName}-any-spend"
+        BudgetType: COST
+        TimeUnit: MONTHLY
+        BudgetLimit: { Amount: 1, Unit: USD }
+        CostTypes: { IncludeCredit: true }
+      NotificationsWithSubscribers:
+        - Notification:                 # actual spend above $0.01 (1% of $1)
+            NotificationType: ACTUAL
+            ComparisonOperator: GREATER_THAN
+            Threshold: 1
+            ThresholdType: PERCENTAGE
+          Subscribers: [{ SubscriptionType: EMAIL, Address: !Ref AlertEmail }]
+        - Notification:                 # forecast to pass $1 this month
+            NotificationType: FORECASTED
+            ComparisonOperator: GREATER_THAN
+            Threshold: 100
+            ThresholdType: PERCENTAGE
+          Subscribers: [{ SubscriptionType: EMAIL, Address: !Ref AlertEmail }]

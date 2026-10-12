@@ -1,12 +1,16 @@
 import logging
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, Request
+from fastapi import Depends, FastAPI, Request
 from fastapi.responses import JSONResponse
+from sqlalchemy import text
+from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.orm import Session
 
 from app.api import ai, analytics, employees, operations
 from app.core.config import get_settings
 from app.core.logging import configure_logging
+from app.db.database import get_session
 from app.services.ai_service import IncidentNotApplicable
 from app.services.analytics_service import InvalidDateRange
 from app.services.employee_service import EmployeeNotFound
@@ -35,6 +39,17 @@ app.include_router(employees.router)
 app.include_router(analytics.router)
 app.include_router(operations.router)
 app.include_router(ai.router)
+
+
+@app.get("/health", tags=["health"])
+def health(session: Session = Depends(get_session)):
+    """Liveness check used by the deployment: the API is up and can reach the database."""
+    try:
+        session.execute(text("SELECT 1"))
+    except SQLAlchemyError:
+        logger.exception("Health check: database unreachable")
+        return JSONResponse(status_code=503, content={"status": "error", "database": "unreachable"})
+    return {"status": "ok", "database": "ok"}
 
 
 def _error(status_code: int, message: str) -> JSONResponse:

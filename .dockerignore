@@ -1,0 +1,18 @@
+# Secrets and local state never go into the image.
+.env
+.env.*
+*.ps1
+.git/
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.vscode/
+.idea/
+
+# Not needed at runtime
+data/
+powerbi/
+docs/
+tests/
+deploy/

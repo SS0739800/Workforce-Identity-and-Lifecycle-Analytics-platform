@@ -76,6 +76,12 @@ def validate(data: dict[str, list[dict]]) -> list[str]:
     return problems
 
 
+def has_employees(engine: Engine) -> bool:
+    """True if the employees table already has rows."""
+    with engine.connect() as conn:
+        return conn.execute(select(table_for("employees").c.id).limit(1)).first() is not None
+
+
 def load(engine: Engine, data: dict[str, list[dict]]) -> dict[str, int]:
     """Replace the generated tables with `data`. Returns row counts read back from the database."""
     with engine.begin() as conn:

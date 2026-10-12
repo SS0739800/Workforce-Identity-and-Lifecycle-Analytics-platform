@@ -26,6 +26,10 @@ def employee_with(dataset, predicate) -> dict:
 
 # --- employees --------------------------------------------------------------------------
 
+def test_health_checks_the_database(client):
+    assert client.get("/health").json() == {"status": "ok", "database": "ok"}
+
+
 def test_list_employees_paginates(client, dataset):
     response = client.get("/api/employees", params={"limit": 25, "offset": 50})
     assert response.status_code == 200

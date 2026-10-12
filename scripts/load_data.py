@@ -2,7 +2,7 @@
 
 Run the Alembic migrations first:
     alembic upgrade head
-    python scripts/load_data.py [--input data/raw]
+    python scripts/load_data.py [--input data/raw] [--if-empty]
 """
 
 import argparse
@@ -16,7 +16,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from app.core.config import get_settings  # noqa: E402
 from app.core.logging import configure_logging  # noqa: E402
 from app.db.database import make_engine  # noqa: E402
-from app.etl.loader import ValidationError, load, read_raw_tables, validate  # noqa: E402
+from app.etl.loader import ValidationError, has_employees, load, read_raw_tables, validate  # noqa: E402
 
 logger = logging.getLogger("load_data")
 
@@ -25,10 +25,18 @@ def main() -> int:
     settings = get_settings()
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--input", type=Path, default=settings.raw_data_dir)
+    parser.add_argument("--if-empty", action="store_true",
+                        help="skip the load if the database already has employees (used by the AWS deployment, "
+                             "so a redeploy keeps changes made through the API)")
     args = parser.parse_args()
 
     configure_logging(settings.log_level)
     started = time.perf_counter()
+    engine = make_engine()
+
+    if args.if_empty and has_employees(engine):
+        logger.info("Database already has data; skipping the load (--if-empty)")
+        return 0
 
     try:
         data = read_raw_tables(args.input)
@@ -45,7 +53,7 @@ def main() -> int:
         return 1
     logger.info("Validation passed for %d tables", len(data))
 
-    counts = load(make_engine(), data)
+    counts = load(engine, data)
     mismatched = [name for name, rows in data.items() if counts[name] != len(rows)]
     if mismatched:
         logger.error("Row counts in the database do not match the CSV files: %s", ", ".join(mismatched))

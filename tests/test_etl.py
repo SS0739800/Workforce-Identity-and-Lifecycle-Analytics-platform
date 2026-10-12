@@ -5,7 +5,7 @@ from sqlalchemy import text
 from sqlalchemy.exc import IntegrityError
 
 from app.etl.csv_files import read_table, write_tables
-from app.etl.loader import ValidationError, load, read_raw_tables, validate
+from app.etl.loader import ValidationError, has_employees, load, read_raw_tables, validate
 
 
 @pytest.fixture(scope="module")
@@ -50,6 +50,11 @@ def test_load_into_postgres(db_engine, raw_dir):
     data = read_raw_tables(raw_dir)
     counts = load(db_engine, data)
     assert counts == {name: len(rows) for name, rows in data.items()}
+
+
+def test_has_employees_after_a_load(db_engine, raw_dir):
+    load(db_engine, read_raw_tables(raw_dir))
+    assert has_employees(db_engine)
 
 
 def test_reload_replaces_data_instead_of_appending(db_engine, raw_dir):

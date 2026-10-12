@@ -14,8 +14,8 @@ infrastructure or data is used.
 > SQL analytics, a REST API, and lifecycle operations (sync, workflows, data-quality scan) that run
 > against the database, and a four-page Power BI report (Phase 4) saved as a Power BI Project
 > in `powerbi/`, and an AI explanation layer (Groq, with Gemini as a fallback) over the analytics
-> (Phase 5), and a Streamlit operations console on top of the API (Phase 6). AWS deployment is not
-> implemented yet.
+> (Phase 5), a Streamlit operations console on top of the API (Phase 6), and an on-demand AWS
+> deployment sized for the free tier (Phase 7).
 
 ## What exists so far
 
@@ -43,10 +43,17 @@ infrastructure or data is used.
   (it has no database access of its own). From it you can look up one employee's access, workflows,
   changes and audit trail, re-run failed workflows, run a sync or a data-quality scan (each needs
   a confirmation tick first), and ask the AI layer questions.
+- An AWS deployment created and deleted with one command (`scripts/aws_deploy.py`). It runs the API and
+  console as containers on one EC2 instance, with PostgreSQL on RDS in private subnets. Secrets
+  live in SSM Parameter Store, the release and CSVs in S3, and logs in CloudWatch. Everything is
+  written in CloudFormation and kept within the free tier, with no load balancer, NAT gateway or
+  Secrets Manager. See [docs/aws.md](docs/aws.md), including the trade-offs against a production
+  setup.
 - Tests for the validation rules, the shared lifecycle engine, generated data, the load step,
   every query (checked against an independent Python calculation), the lifecycle operations
-  against PostgreSQL, the API, the AI layer (with the models mocked), and the Streamlit pages
-  (rendered with Streamlit's test runner against the API).
+  against PostgreSQL, the API, the AI layer (with the models mocked), the Streamlit pages
+  (rendered with Streamlit's test runner against the API), and the deployment templates (linted,
+  with the database privacy, network and IAM rules asserted).
 
 ## Setup
 
@@ -74,6 +81,14 @@ streamlit run streamlit_app/app.py # console at http://localhost:8501
 ```
 
 The console calls the API at `API_BASE_URL` (default `http://127.0.0.1:8000`).
+
+To run the API and console in containers instead (the same image the AWS deployment uses):
+
+```bash
+docker compose --profile app up -d --build   # console at http://localhost:8501
+```
+
+To deploy to AWS, see [docs/aws.md](docs/aws.md).
 
 ## Tests
 
@@ -106,9 +121,11 @@ app/
 streamlit_app/ Streamlit console: app.py (navigation), api.py (HTTP client),
                ui.py (shared tables, charts, filters), pages/
 .streamlit/    Streamlit theme and server settings
+deploy/aws/    CloudFormation templates and the instance start script
+Dockerfile     one image for the API, the console and the jobs
 alembic/       migrations
 powerbi/       Power Query scripts, DAX measures, report design, validation query
-scripts/       generate_data.py, load_data.py, create_reporting_user.py
+scripts/       generate_data.py, load_data.py, create_reporting_user.py, aws_deploy.py
 tests/
 docs/
 ```

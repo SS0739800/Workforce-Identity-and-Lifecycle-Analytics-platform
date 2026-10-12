@@ -1,3 +1,7 @@
 -r requirements.txt
 pytest==9.1.1
 httpx2==2.13.1
+
+# AWS deployment (scripts/aws_deploy.py) and template linting; not needed in the app image
+boto3==1.43.111
+cfn-lint==1.57.2
