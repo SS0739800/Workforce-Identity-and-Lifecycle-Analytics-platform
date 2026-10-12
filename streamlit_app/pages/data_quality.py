@@ -5,7 +5,7 @@ import streamlit as st
 
 from streamlit_app import api, ui
 
-ui.header("Data Quality", "Where does the HR data have problems, and do they affect operations?")
+ui.header("Data Quality")
 start, end = ui.date_filter()
 
 try:
@@ -53,7 +53,7 @@ with right:
     st.markdown("**By department**")
     ui.table(quality["by_department"])
 
-st.subheader("Do data-quality issues affect the sync?")
+st.subheader("Sync failure rate by data-quality status")
 impact = pd.DataFrame(quality["sync_impact"])
 if not impact.empty:
     impact["records"] = impact["had_open_issue"].map({True: "Open issue at the time", False: "No open issue"})
@@ -62,9 +62,8 @@ if not impact.empty:
     figure.update_traces(texttemplate="%{text:.1f}%", showlegend=False)
     figure.update_yaxes(ticksuffix="%")
     ui.chart(figure, "Sync failure rate", height=300)
-st.caption("Records with an open data-quality issue fail to sync far more often. In this synthetic dataset that "
-           "link is built in (the sync validates the same rules the scan checks), so this shows an association, "
-           "not a measured cause.")
+st.caption("In this synthetic dataset the link is built in (the sync validates the same rules the scan checks), "
+           "so this is an association, not a measured cause.")
 
 st.subheader("Employees with open issues")
 issues = quality["employees_with_open_issues"]
@@ -79,9 +78,9 @@ if selection and selection.selection.rows:
     st.session_state["employee_id"] = issues[selection.selection.rows[0]]["employee_db_id"]
     st.switch_page("pages/employees.py")
 
-st.subheader("Run the data-quality scan")
-st.caption("Re-checks every record: opens new issues and resolves fixed ones. This changes data.")
-confirm = st.checkbox("I want to run the scan")
+st.subheader("Run scan")
+st.caption("Re-checks every record: opens new issues and resolves fixed ones.")
+confirm = st.checkbox("Confirm: this changes data")
 if st.button("Run scan", type="primary", disabled=not confirm):
     try:
         result = api.post("/api/data-quality/scans")

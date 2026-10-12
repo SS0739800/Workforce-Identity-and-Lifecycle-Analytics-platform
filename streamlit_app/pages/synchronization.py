@@ -5,7 +5,7 @@ import streamlit as st
 
 from streamlit_app import api, ui
 
-ui.header("Synchronization", "Are identity records synchronizing reliably?")
+ui.header("Synchronization")
 start, end = ui.date_filter()
 
 try:
@@ -50,9 +50,9 @@ with left:
     else:
         figure = px.bar(errors.sort_values("failures"), x="failures", y="error_type", orientation="h",
                         color_discrete_sequence=[ui.ACCENT])
-        ui.chart(figure, "Why records fail")
+        ui.chart(figure, "Failed records by error type")
 with right:
-    st.markdown("**Department performance**")
+    st.markdown("**Failures by department**")
     ui.table(
         summary["failures_by_department"],
         rename={"department": "Department", "sync_attempts": "Attempts", "failures": "Failures",
@@ -65,10 +65,10 @@ st.subheader("Failed runs")
 failed_runs = [run for run in runs if run["status"] == "failed"]
 ui.table(failed_runs, columns=["started_at", "run_id", "triggered_by", "error_message"])
 
-st.subheader("Run the sync now")
+st.subheader("Run sync")
 st.caption("Processes HR changes since the last sync and starts any onboarding, offboarding, leave or "
-           "return workflows they need. This changes data.")
-confirm = st.checkbox("I want to run the sync")
+           "return workflows they need.")
+confirm = st.checkbox("Confirm: this changes data")
 if st.button("Run sync", type="primary", disabled=not confirm):
     with st.spinner("Running sync..."):
         try:

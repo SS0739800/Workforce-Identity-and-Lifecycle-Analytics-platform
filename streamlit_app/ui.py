@@ -10,10 +10,14 @@ import streamlit as st
 from streamlit_app.api import ApiError
 
 # One neutral colour for normal values, one accent for failures, used the same way everywhere.
-NEUTRAL = "#3A6EA5"
-ACCENT = "#D9822B"
-MUTED = "#A19F9D"
-SERIES = [NEUTRAL, "#7FA7CF", "#5B8C5A", "#8E6C8A", MUTED]
+# Fluent 2 dark palette, to match the theme in .streamlit/config.toml.
+NEUTRAL = "#479EF5"
+ACCENT = "#E9835E"
+MUTED = "#8A8A8A"
+SERIES = [NEUTRAL, "#A9D3F2", "#54B054", "#4CB8B8", MUTED]
+TEXT = "#D6D6D6"
+GRID = "#333333"
+SURFACE = "#292929"
 # Plotly Express picks its own colours unless told otherwise; red would read as "failure".
 px.defaults.color_discrete_sequence = SERIES
 
@@ -25,25 +29,24 @@ DATA_START = date(2025, 10, 1)
 DATA_END = date(2026, 9, 30)
 
 
-def header(title: str, question: str):
+def header(title: str):
     st.title(title)
-    st.caption(question)
 
 
 def date_filter() -> tuple[date | None, date | None]:
-    """Sidebar date range, shared by every page through session state."""
+    """Sidebar date range, shared by every page through session state. Notes the period under the title."""
     with st.sidebar:
         st.subheader("Period")
         everything = st.toggle("All data", value=st.session_state.get("all_data", True), key="all_data")
-        if everything:
-            return None, None
-        chosen = st.date_input(
+        chosen = None if everything else st.date_input(
             "Date range", value=st.session_state.get("date_range", (DATA_START, DATA_END)), key="date_range",
             format="YYYY-MM-DD",
         )
     if isinstance(chosen, (list, tuple)) and len(chosen) == 2:
+        st.caption(f"{chosen[0]} to {chosen[1]}")
         return chosen[0], chosen[1]
-    return None, None  # only one date picked so far
+    st.caption(f"All data · {DATA_START} to {DATA_END}")
+    return None, None  # all data, or only one date picked so far
 
 
 def show_error(error: ApiError):
@@ -54,7 +57,7 @@ def show_error(error: ApiError):
 def metric_row(items: list[tuple[str, object]], help_text: dict | None = None):
     columns = st.columns(len(items))
     for column, (label, value) in zip(columns, items):
-        column.metric(label, "-" if value is None else value, help=(help_text or {}).get(label))
+        column.metric(label, "-" if value is None else value, help=(help_text or {}).get(label), border=True)
 
 
 def when(value: str | None) -> str:
@@ -87,22 +90,25 @@ def table(rows: list[dict], columns: list[str] | None = None, rename: dict | Non
 
 def style_figure(figure: go.Figure, title: str, height: int = 340) -> go.Figure:
     figure.update_layout(
-        title={"text": title, "font": {"size": 15}},
+        title={"text": title, "x": 0, "xanchor": "left", "font": {"size": 14, "color": "#FFFFFF"}},
         height=height,
         margin={"l": 10, "r": 10, "t": 45, "b": 10},
         legend={"orientation": "h", "y": -0.18, "title": None},
-        plot_bgcolor="white",
-        paper_bgcolor="white",
+        plot_bgcolor="rgba(0,0,0,0)",
+        paper_bgcolor="rgba(0,0,0,0)",
         colorway=SERIES,
-        font={"family": "Segoe UI, sans-serif", "size": 12},
+        font={"family": "Segoe UI, sans-serif", "size": 12, "color": TEXT},
+        hoverlabel={"bgcolor": SURFACE, "bordercolor": GRID, "font": {"color": "#FFFFFF"}},
     )
-    figure.update_xaxes(showgrid=False, title=None)
-    figure.update_yaxes(gridcolor="#EDEBE9", title=None, rangemode="tozero")
+    figure.update_xaxes(showgrid=False, title=None, linecolor=GRID, automargin=True)
+    figure.update_yaxes(gridcolor=GRID, zerolinecolor=GRID, title=None, rangemode="tozero", automargin=True)
     return figure
 
 
 def chart(figure: go.Figure, title: str, height: int = 340):
-    st.plotly_chart(style_figure(figure, title, height), width="stretch", config={"displayModeBar": False})
+    with st.container(border=True):
+        st.plotly_chart(style_figure(figure, title, height), width="stretch", config={"displayModeBar": False},
+                        theme=None)
 
 
 STATUS_LABELS = {

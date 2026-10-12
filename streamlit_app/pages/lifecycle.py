@@ -4,7 +4,7 @@ import streamlit as st
 
 from streamlit_app import api, ui
 
-ui.header("Lifecycle Workflows", "How reliably do onboarding, offboarding, leave and return complete?")
+ui.header("Lifecycle")
 start, end = ui.date_filter()
 
 try:
@@ -52,7 +52,7 @@ if not monthly.empty:
 errors = pd.DataFrame(failures["by_error_type"])
 if not errors.empty:
     grid = errors.pivot_table(index="action_type", columns="error_type", values="failures", fill_value=0)
-    figure = px.imshow(grid, text_auto=True, aspect="auto", color_continuous_scale=["#FFFFFF", ui.ACCENT])
+    figure = px.imshow(grid, text_auto=True, aspect="auto", color_continuous_scale=[ui.SURFACE, ui.ACCENT])
     figure.update_coloraxes(showscale=False)
     ui.chart(figure, "Failed actions by error type", height=360)
 st.caption("License removal fails more often than group removal because the simulation assumes a less reliable "
@@ -62,7 +62,7 @@ st.subheader("Pending workflows")
 ui.table(summary["pending"], columns=["workflow_run_id", "workflow_type", "employee_id", "employee_name",
                                       "termination_date", "requested_at"])
 
-st.subheader("Investigate a workflow")
+st.subheader("Workflow lookup")
 workflow_id = st.number_input("Workflow run ID", min_value=1, step=1, value=None, placeholder="e.g. 362")
 if workflow_id:
     try:

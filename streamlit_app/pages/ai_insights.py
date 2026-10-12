@@ -7,9 +7,9 @@ import streamlit as st
 
 from streamlit_app import api, ui
 
-ui.header("AI Insights", "Plain-language explanations of the numbers, grounded in the data")
-st.caption("Every answer starts from an approved SQL query. The model explains those numbers; it never writes "
-           "SQL or produces figures of its own. Names and emails are never sent to the model.")
+ui.header("AI Insights")
+st.caption("Each answer is written by a language model from the result of an approved SQL query. The model does "
+           "not write SQL or add figures. Names and emails are removed before anything is sent.")
 
 EXAMPLES = [
     "Which departments had the most synchronization failures this quarter?",

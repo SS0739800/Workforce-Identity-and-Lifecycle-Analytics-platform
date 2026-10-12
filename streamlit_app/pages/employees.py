@@ -5,7 +5,7 @@ import streamlit as st
 
 from streamlit_app import api, ui
 
-ui.header("Employee Investigation", "What happened to this person's identity, and is anything wrong?")
+ui.header("Employees")
 
 # --- find an employee ----------------------------------------------------------------------------
 search_column, status_column = st.columns([3, 1])
@@ -36,7 +36,7 @@ if "employee" in st.query_params and st.query_params["employee"].isdigit():
 
 employee_id = st.session_state.get("employee_id")
 if employee_id is None:
-    st.info("Select an employee to investigate.")
+    st.info("Select an employee to see their details.")
     st.stop()
 
 # --- the employee ----------------------------------------------------------------------------------
@@ -49,7 +49,7 @@ except api.ApiError as error:
     ui.show_error(error)
 
 st.divider()
-st.subheader(f"{person['first_name']} {person['last_name']}")
+st.header(f"{person['first_name']} {person['last_name']}")
 st.caption(" · ".join(str(part) for part in [
     person["employee_id"] or "no HR ID", person["job_title"] or "no title", person["department"] or "no department",
     person["location"] or "no location", person["employment_type"],
@@ -118,7 +118,7 @@ with workflow_tab:
                                               "error_message", "started_at", "completed_at"])
             if run["status"] == "failed":
                 rerun_column, report_column = st.columns(2)
-                confirm = rerun_column.checkbox("I want to re-run the failed steps", key=f"confirm_{run['id']}")
+                confirm = rerun_column.checkbox("Confirm: this changes data", key=f"confirm_{run['id']}")
                 if rerun_column.button("Re-run failed steps", key=f"rerun_{run['id']}", disabled=not confirm):
                     try:
                         rerun = api.post(f"/api/workflows/{run['id']}/rerun")

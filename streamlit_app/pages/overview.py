@@ -5,7 +5,7 @@ import streamlit as st
 
 from streamlit_app import api, ui
 
-ui.header("Identity Operations Overview", "What is happening across identity operations?")
+ui.header("Overview")
 start, end = ui.date_filter()
 
 try:
@@ -57,7 +57,7 @@ with right:
         ui.chart(figure, "Failures by month")
 
 st.subheader("Leavers with access remaining")
-st.caption("Highest-risk item on this page: accounts or access that offboarding left behind. "
+st.caption("Terminated employees who still have an enabled account or assigned access (current state). "
            "Select a row to open the employee.")
 leavers = offboarding["access_remaining"]
 selection = ui.table(

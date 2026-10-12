@@ -12,9 +12,8 @@ import streamlit as st
 # Streamlit runs this file as a script; make the project root importable.
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from streamlit_app.api import BASE_URL  # noqa: E402
-
-st.set_page_config(page_title="Identity Operations", layout="wide")
+FAVICON = Path(__file__).parent / "assets" / "favicon.png"  # an identity record on a Fluent blue tile
+st.set_page_config(page_title="Identity Operations", page_icon=str(FAVICON), layout="wide")
 
 pages = [
     st.Page("pages/overview.py", title="Overview", default=True),
@@ -29,7 +28,3 @@ with st.sidebar:
     st.markdown("**Northstar Manufacturing**  \nIdentity operations · synthetic data")
 
 st.navigation(pages).run()
-
-with st.sidebar:
-    st.divider()
-    st.caption(f"API: {BASE_URL}")
