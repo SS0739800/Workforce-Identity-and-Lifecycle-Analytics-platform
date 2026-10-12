@@ -325,3 +325,14 @@ def test_sync_failures_with_open_dq_issue(session, dataset):
         assert rows[flag]["failures"] == failures[flag]
     # The association the data is designed to show: flagged records fail far more often.
     assert rows[True]["failure_rate_pct"] > rows[False]["failure_rate_pct"] * 5
+
+
+@pytest.mark.parametrize("workflow_type", ["onboarding", "offboarding", "leave"])
+def test_workflow_action_failures(session, dataset, workflow_type):
+    run_type = {run["id"]: run["workflow_type"] for run in dataset["workflow_runs"]}
+    expected = Counter(
+        (a["action_type"], a["error_type"]) for a in dataset["workflow_actions"]
+        if a["status"] == "failed" and run_type[a["workflow_run_id"]] == workflow_type
+    )
+    rows = run_query(session, "workflow_action_failures", workflow_type=workflow_type)
+    assert {(r["action_type"], r["error_type"]): r["failures"] for r in rows} == dict(expected)

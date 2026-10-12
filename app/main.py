@@ -4,9 +4,10 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
-from app.api import analytics, employees, operations
+from app.api import ai, analytics, employees, operations
 from app.core.config import get_settings
 from app.core.logging import configure_logging
+from app.services.ai_service import IncidentNotApplicable
 from app.services.analytics_service import InvalidDateRange
 from app.services.employee_service import EmployeeNotFound
 from app.services.hr_service import InvalidHRChange
@@ -33,6 +34,7 @@ app = FastAPI(
 app.include_router(employees.router)
 app.include_router(analytics.router)
 app.include_router(operations.router)
+app.include_router(ai.router)
 
 
 def _error(status_code: int, message: str) -> JSONResponse:
@@ -66,4 +68,9 @@ async def rerun_not_allowed(request: Request, error: RerunNotAllowed):
 
 @app.exception_handler(SyncAlreadyRunning)
 async def sync_already_running(request: Request, error: SyncAlreadyRunning):
+    return _error(409, str(error))
+
+
+@app.exception_handler(IncidentNotApplicable)
+async def incident_not_applicable(request: Request, error: IncidentNotApplicable):
     return _error(409, str(error))

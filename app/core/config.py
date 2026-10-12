@@ -17,6 +17,20 @@ class Settings(BaseSettings):
     # Read-only login for Power BI (see scripts/create_reporting_user.py)
     reporting_db_user: str = "powerbi_reader"
     reporting_db_password: str | None = None
+
+    # Groq (optional). Without a key the AI endpoints still return the computed data.
+    groq_api_key: str | None = None
+    # gpt-oss-120b is a Groq production model; the earlier Llama defaults were deprecated in 2026.
+    groq_model: str = "openai/gpt-oss-120b"
+    groq_timeout_seconds: float = 30.0
+    groq_max_retries: int = 2
+    groq_max_completion_tokens: int = 2000
+
+    # Gemini (optional) is used when Groq can't answer, e.g. when its token quota runs out.
+    gemini_api_key: str | None = None
+    gemini_model: str = "gemini-3.5-flash-lite"
+    gemini_timeout_seconds: float = 30.0
+    gemini_max_output_tokens: int = 2000
     data_dir: Path = PROJECT_ROOT / "data"
 
     @property

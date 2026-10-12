@@ -20,7 +20,7 @@ class AnalyticsQuery:
     question: str
     uses_date_range: bool = True
     # Extra parameters and their default values.
-    defaults: tuple[tuple[str, int], ...] = ()
+    defaults: tuple[tuple[str, int | str], ...] = ()
 
     @cached_property
     def sql(self) -> str:
@@ -48,6 +48,8 @@ QUERIES: dict[str, AnalyticsQuery] = {
         AnalyticsQuery("workflow_durations", "How long does each type of workflow take?"),
         AnalyticsQuery("action_failure_rates", "Which workflow actions fail most often?"),
         AnalyticsQuery("action_failures_by_error_type", "What kind of error causes each action failure?"),
+        AnalyticsQuery("workflow_action_failures", "Which actions failed in one type of workflow, and why?",
+                       defaults=(("workflow_type", "offboarding"),)),
         AnalyticsQuery("pending_workflows", "Which workflows are waiting to run?", uses_date_range=False),
         AnalyticsQuery("repeated_operational_failures", "Which employees keep running into failures?",
                        defaults=(("min_failures", 3), ("limit", 25))),
