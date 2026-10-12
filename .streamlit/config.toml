@@ -1,0 +1,20 @@
+# Plain, enterprise-style theme: white background, one blue for normal values,
+# one orange used only for failures and warnings (see streamlit_app/ui.py).
+[theme]
+base = "light"
+primaryColor = "#3A6EA5"
+backgroundColor = "#FFFFFF"
+secondaryBackgroundColor = "#F3F2F1"
+textColor = "#201F1E"
+font = "sans serif"
+
+[client]
+toolbarMode = "minimal"
+
+[server]
+headless = true
+# Local development only listens on this machine. The container (Phase 7) overrides this.
+address = "localhost"
+
+[browser]
+gatherUsageStats = false

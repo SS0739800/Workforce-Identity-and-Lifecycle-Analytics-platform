@@ -14,7 +14,8 @@ infrastructure or data is used.
 > SQL analytics, a REST API, and lifecycle operations (sync, workflows, data-quality scan) that run
 > against the database, and a four-page Power BI report (Phase 4) saved as a Power BI Project
 > in `powerbi/`, and an AI explanation layer (Groq, with Gemini as a fallback) over the analytics
-> (Phase 5). Streamlit and AWS deployment are not implemented yet.
+> (Phase 5), and a Streamlit operations console on top of the API (Phase 6). AWS deployment is not
+> implemented yet.
 
 ## What exists so far
 
@@ -37,9 +38,15 @@ infrastructure or data is used.
   the primary model and Gemini the fallback; the model only explains numbers computed in SQL, personal
   fields are removed before anything is sent, every number in an answer is checked against the data,
   and everything still works without an API key. See [docs/ai.md](docs/ai.md).
+- A Streamlit console for day-to-day investigation, with six pages: Overview, Employee Investigation,
+  Synchronization, Lifecycle, Data Quality and AI Insights. It reads everything through the API
+  (it has no database access of its own). From it you can look up one employee's access, workflows,
+  changes and audit trail, re-run failed workflows, run a sync or a data-quality scan (each needs
+  a confirmation tick first), and ask the AI layer questions.
 - Tests for the validation rules, the shared lifecycle engine, generated data, the load step,
   every query (checked against an independent Python calculation), the lifecycle operations
-  against PostgreSQL, the API, and the AI layer (with the models mocked).
+  against PostgreSQL, the API, the AI layer (with the models mocked), and the Streamlit pages
+  (rendered with Streamlit's test runner against the API).
 
 ## Setup
 
@@ -59,6 +66,14 @@ python scripts/load_data.py        # validate and load into PostgreSQL
 
 uvicorn app.main:app --reload      # API docs at http://127.0.0.1:8000/docs
 ```
+
+Then, in a second terminal (with the API still running):
+
+```bash
+streamlit run streamlit_app/app.py # console at http://localhost:8501
+```
+
+The console calls the API at `API_BASE_URL` (default `http://127.0.0.1:8000`).
 
 ## Tests
 
@@ -88,6 +103,9 @@ app/
   schemas/     Pydantic response models
   api/         FastAPI routers
   main.py      FastAPI application
+streamlit_app/ Streamlit console: app.py (navigation), api.py (HTTP client),
+               ui.py (shared tables, charts, filters), pages/
+.streamlit/    Streamlit theme and server settings
 alembic/       migrations
 powerbi/       Power Query scripts, DAX measures, report design, validation query
 scripts/       generate_data.py, load_data.py, create_reporting_user.py
