@@ -13,7 +13,8 @@ infrastructure or data is used.
 > **Status: work in progress.** Phases 1–3 are in place: database, synthetic data, loading,
 > SQL analytics, a REST API, and lifecycle operations (sync, workflows, data-quality scan) that run
 > against the database, and a four-page Power BI report (Phase 4) saved as a Power BI Project
-> in `powerbi/`. Streamlit, AI and AWS deployment are not implemented yet.
+> in `powerbi/`, and an AI explanation layer (Groq, with Gemini as a fallback) over the analytics
+> (Phase 5). Streamlit and AWS deployment are not implemented yet.
 
 ## What exists so far
 
@@ -21,7 +22,7 @@ infrastructure or data is used.
 - A deterministic, day-by-day simulation of one year of identity operations for ~1,000
   fictional employees. See [docs/data-generation.md](docs/data-generation.md).
 - Validation and loading of the generated CSV files into PostgreSQL.
-- 27 analytical SQL queries covering sync reliability, attribute changes, workflow failures,
+- 28 analytical SQL queries covering sync reliability, attribute changes, workflow failures,
   offboarding and access cleanup, and data quality. See [docs/analytics.md](docs/analytics.md).
 - A FastAPI service for employee investigation and analytics.
 - A Power BI report with four pages (Overview, Synchronization, Lifecycle, Data Quality), built on a
@@ -31,9 +32,14 @@ infrastructure or data is used.
 - Lifecycle operations through the API: enter HR changes, run the sync, onboard, offboard,
   handle leave and return, re-run failed workflows, and run the data-quality scan. The simulator
   and the API share the same rules in `app/lifecycle/`. See [docs/operations.md](docs/operations.md).
+- AI explanations on top of the analytics: natural-language questions mapped to approved queries,
+  failure explanations, monthly summaries, data-quality explanations and incident reports. Groq is
+  the primary model and Gemini the fallback; the model only explains numbers computed in SQL, personal
+  fields are removed before anything is sent, every number in an answer is checked against the data,
+  and everything still works without an API key. See [docs/ai.md](docs/ai.md).
 - Tests for the validation rules, the shared lifecycle engine, generated data, the load step,
   every query (checked against an independent Python calculation), the lifecycle operations
-  against PostgreSQL, and the API.
+  against PostgreSQL, the API, and the AI layer (with the models mocked).
 
 ## Setup
 
@@ -75,8 +81,10 @@ app/
   synthetic/   the year-long simulation and its assumptions
   etl/         CSV read/write, validation and loading
   analytics/   named SQL queries (sql/*.sql) and the query registry
-  services/    analytics, employee lookups, and database-backed sync, workflow,
-               data-quality and HR operations
+  ai/          model clients (Groq, Gemini fallback), prompts, question routing,
+               sanitizing and the grounding check
+  services/    analytics, employee lookups, database-backed sync, workflow,
+               data-quality and HR operations, and AI insights
   schemas/     Pydantic response models
   api/         FastAPI routers
   main.py      FastAPI application

@@ -52,6 +52,7 @@ generated rows (`tests/test_analytics.py`).
 | `/api/analytics/workflow-failures` | `action_failure_rates` | Which workflow actions fail most often? |
 | | `action_failures_by_error_type` | What kind of error causes each action failure? |
 | | `repeated_operational_failures` | Which employees keep running into failures across sync and workflows? |
+| *(AI layer only)* | `workflow_action_failures` | Which actions failed in one type of workflow, and why? |
 | `/api/analytics/offboarding` | `offboarding_monthly` | How many offboardings ran each month and how many needed a re-run? |
 | | `time_to_disable_account` | How quickly are accounts disabled after termination? |
 | | `access_remaining_after_offboarding` *(current state)* | Which leavers still have an enabled account or access? |
