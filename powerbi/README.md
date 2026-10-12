@@ -59,9 +59,9 @@ Design choices:
 - **`fact_sync_runs` has no employee.** A run covers everyone, so run-level measures don't
   respond to the department slicer. The report says so on the page.
 - **Shaping happens in SQL, not Power Query.** Joins, flags (`is_attempt`, `is_rerun`,
-  `had_open_dq_issue`) and durations are in the views, where they are tested and fold back to
-  PostgreSQL. Power Query only connects, sets types, converts timestamps to UTC date-times and
-  labels missing HR IDs.
+  `had_open_dq_issue`), durations and UTC timestamps are in the views, where they are tested and
+  fold back to PostgreSQL. Power Query only connects, drops the time-zone-aware timestamp
+  columns, sets types and labels missing HR IDs.
 - **No email in the model.** The reports don't need it.
 
 ## Building the report
@@ -99,8 +99,8 @@ Re-run `create_reporting_user.py` after any migration that re-creates the report
    database (Phase 7), keep encryption on.
 5. Close & Apply. Row counts should match `validation.sql`.
 
-If a timestamp step fails with a type error, the connector returned plain date-times instead of
-date-time-zones. Delete the `ToUtc` step in that query; the values are already UTC.
+Timestamps come from the views' `*_utc` columns (plain UTC date-times). The time-zone-aware
+originals are dropped in Power Query because the connector returned them as nulls.
 
 ### 4. Model
 
@@ -114,7 +114,8 @@ date-time-zones. Delete the `ToUtc` step in that query; the values are already U
 
 ### 5. Measures
 
-1. Home > Enter data > create an empty table named `Measures`, then hide its placeholder column.
+1. Home > Enter data > create an empty table named `_Measures` ("Measures" is reserved in Power BI),
+   then hide its placeholder column.
 2. Add each measure from `measures.dax` (New measure, paste one block at a time) and put it in a
    display folder matching its section heading.
 3. Format every measure ending in `Rate` as a percentage with one decimal place, and counts as
@@ -140,6 +141,24 @@ or a filter left on a visual.
 Save into this folder as `WorkforceIdentity.pbip` (or `.pbix` if the project format isn't
 available). `.gitignore` already excludes Power BI's local cache and settings files.
 Export page screenshots to `docs/images/` for the main README.
+
+## Opening the saved report
+
+The report is saved as a Power BI Project: open `WorkforceIdentity.pbip` in Power BI Desktop.
+Pages and visuals are stored as JSON under `WorkforceIdentity.Report/definition/`, and the model
+(tables, relationships, measures) as TMDL under `WorkforceIdentity.SemanticModel/definition/`, so
+changes show up as readable diffs. No credentials are stored in these files; Power BI asks for the
+`powerbi_reader` password on the first refresh.
+
+On Windows, the visual files have long paths. If git reports "Filename too long", run
+`git config core.longpaths true` in the repository. Power BI Desktop itself can't open files
+whose full path is over 260 characters; if the repository is in a deeply nested folder, open the
+report through a short folder link instead, for example:
+
+```powershell
+New-Item -ItemType Junction -Path C:\Users\<you>\wi-powerbi -Target <repository>\powerbi
+# then open C:\Users\<you>\wi-powerbi\WorkforceIdentity.pbip
+```
 
 ## Switching to the cloud database later
 

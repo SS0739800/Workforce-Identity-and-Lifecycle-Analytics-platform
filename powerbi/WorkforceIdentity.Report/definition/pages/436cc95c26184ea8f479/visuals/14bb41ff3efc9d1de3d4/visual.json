@@ -1,0 +1,108 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.13.0/schema.json",
+  "name": "14bb41ff3efc9d1de3d4",
+  "position": {
+    "x": 0,
+    "y": 90,
+    "z": 5,
+    "height": 120,
+    "width": 1920,
+    "tabOrder": 5
+  },
+  "visual": {
+    "visualType": "cardVisual",
+    "query": {
+      "queryState": {
+        "Data": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Measures"
+                    }
+                  },
+                  "Property": "Workflow Count"
+                }
+              },
+              "queryRef": "_Measures.Workflow Count",
+              "nativeQueryRef": "Workflow Count"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Measures"
+                    }
+                  },
+                  "Property": "Workflow Success Rate"
+                }
+              },
+              "queryRef": "_Measures.Workflow Success Rate",
+              "nativeQueryRef": "Workflow Success Rate"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Measures"
+                    }
+                  },
+                  "Property": "First-Time Offboarding Success Rate"
+                }
+              },
+              "queryRef": "_Measures.First-Time Offboarding Success Rate",
+              "nativeQueryRef": "First-Time Offboarding Success Rate"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Measures"
+                    }
+                  },
+                  "Property": "Avg Workflow Duration (s)"
+                }
+              },
+              "queryRef": "_Measures.Avg Workflow Duration (s)",
+              "nativeQueryRef": "Avg Workflow Duration (s)"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Measures"
+                    }
+                  },
+                  "Property": "Service Desk Reruns"
+                }
+              },
+              "queryRef": "_Measures.Service Desk Reruns",
+              "nativeQueryRef": "Service Desk Reruns"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Measures"
+                    }
+                  },
+                  "Property": "Pending Workflows"
+                }
+              },
+              "queryRef": "_Measures.Pending Workflows",
+              "nativeQueryRef": "Pending Workflows"
+            }
+          ]
+        }
+      }
+    },
+    "drillFilterOtherVisuals": true
+  }
+}

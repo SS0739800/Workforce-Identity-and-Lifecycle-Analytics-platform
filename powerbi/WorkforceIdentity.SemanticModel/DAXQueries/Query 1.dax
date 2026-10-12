@@ -1,0 +1,141 @@
+DEFINE
+    MEASURE '_Measures'[Total Employees] =
+        COUNTROWS ( dim_employee )
+
+    MEASURE '_Measures'[Active Employees] =
+        CALCULATE ( [Total Employees], dim_employee[employment_status] = "active" )
+
+    MEASURE '_Measures'[Active Identities] =
+        CALCULATE ( [Total Employees], dim_employee[account_status] = "active" )
+
+    MEASURE '_Measures'[Leavers With Access Remaining] =
+        CALCULATE ( [Total Employees], dim_employee[has_access_after_termination] = TRUE () )
+
+    MEASURE '_Measures'[Sync Runs] =
+        COUNTROWS ( fact_sync_runs )
+
+    MEASURE '_Measures'[Failed Sync Runs] =
+        CALCULATE ( [Sync Runs], fact_sync_runs[status] = "failed" )
+
+    MEASURE '_Measures'[Sync Run Success Rate] =
+        DIVIDE ( [Sync Runs] - [Failed Sync Runs], [Sync Runs] )
+
+    MEASURE '_Measures'[Records Evaluated] =
+        SUM ( fact_sync_runs[total_records] )
+
+    MEASURE '_Measures'[Sync Record Attempts] =
+        COUNTROWS ( fact_sync_records )
+
+    MEASURE '_Measures'[Sync Records Updated] =
+        CALCULATE ( [Sync Record Attempts], fact_sync_records[status] = "success" )
+
+    MEASURE '_Measures'[Sync Records Failed] =
+        CALCULATE ( [Sync Record Attempts], fact_sync_records[status] = "failed" )
+
+    MEASURE '_Measures'[Sync Success Rate] =
+        DIVIDE ( [Sync Records Updated], [Sync Record Attempts] )
+
+    MEASURE '_Measures'[Sync Failure Rate] =
+        DIVIDE ( [Sync Records Failed], [Sync Record Attempts] )
+
+    MEASURE '_Measures'[Avg Sync Run Duration (s)] =
+        AVERAGE ( fact_sync_runs[duration_seconds] )
+
+    MEASURE '_Measures'[Workflow Count] =
+        COUNTROWS ( fact_workflow_runs )
+
+    MEASURE '_Measures'[Completed Workflows] =
+        CALCULATE ( [Workflow Count], fact_workflow_runs[status] = "completed" )
+
+    MEASURE '_Measures'[Failed Workflows] =
+        CALCULATE ( [Workflow Count], fact_workflow_runs[status] = "failed" )
+
+    MEASURE '_Measures'[Pending Workflows] =
+        CALCULATE ( [Workflow Count], fact_workflow_runs[status] = "pending" )
+
+    MEASURE '_Measures'[Workflow Success Rate] =
+        DIVIDE ( [Completed Workflows], [Completed Workflows] + [Failed Workflows] )
+
+    MEASURE '_Measures'[Workflow Failure Rate] =
+        DIVIDE ( [Failed Workflows], [Completed Workflows] + [Failed Workflows] )
+
+    MEASURE '_Measures'[Service Desk Reruns] =
+        CALCULATE ( [Workflow Count], fact_workflow_runs[is_rerun] = TRUE () )
+
+    MEASURE '_Measures'[Avg Workflow Duration (s)] =
+        AVERAGE ( fact_workflow_runs[duration_seconds] )
+
+    MEASURE '_Measures'[First-Time Offboarding Success Rate] =
+        VAR FirstAttempts =
+            CALCULATE (
+                [Workflow Count],
+                fact_workflow_runs[workflow_type] = "offboarding",
+                fact_workflow_runs[is_rerun] = FALSE (),
+                fact_workflow_runs[status] IN { "completed", "failed" }
+            )
+        VAR Succeeded =
+            CALCULATE (
+                [Workflow Count],
+                fact_workflow_runs[workflow_type] = "offboarding",
+                fact_workflow_runs[is_rerun] = FALSE (),
+                fact_workflow_runs[status] = "completed"
+            )
+        RETURN
+            DIVIDE ( Succeeded, FirstAttempts )
+
+    MEASURE '_Measures'[Action Attempts] =
+        CALCULATE ( COUNTROWS ( fact_workflow_actions ), fact_workflow_actions[is_attempt] = TRUE () )
+
+    MEASURE '_Measures'[Failed Actions] =
+        CALCULATE ( COUNTROWS ( fact_workflow_actions ), fact_workflow_actions[status] = "failed" )
+
+    MEASURE '_Measures'[Action Failure Rate] =
+        DIVIDE ( [Failed Actions], [Action Attempts] )
+
+    MEASURE '_Measures'[DQ Issues] =
+        COUNTROWS ( fact_dq_issues )
+
+    MEASURE '_Measures'[Open DQ Issues] =
+        CALCULATE ( [DQ Issues], fact_dq_issues[status] = "open" )
+
+    MEASURE '_Measures'[Resolved DQ Issues] =
+        CALCULATE ( [DQ Issues], fact_dq_issues[status] = "resolved" )
+
+    MEASURE '_Measures'[Open Critical DQ Issues] =
+        CALCULATE ( [Open DQ Issues], fact_dq_issues[severity] = "critical" )
+
+    MEASURE '_Measures'[Employees With Open Issues] =
+        CALCULATE ( DISTINCTCOUNT ( fact_dq_issues[employee_key] ), fact_dq_issues[status] = "open" )
+
+    MEASURE '_Measures'[Avg Days to Resolve] =
+        AVERAGE ( fact_dq_issues[days_to_resolve] )
+
+    MEASURE '_Measures'[Issues Resolved (by resolved date)] =
+        CALCULATE (
+            COUNTROWS ( fact_dq_issues ),
+            USERELATIONSHIP ( fact_dq_issues[resolved_date], dim_date[date] ),
+            NOT ISBLANK ( fact_dq_issues[resolved_date] )
+        )
+
+    MEASURE '_Measures'[Attribute Changes] =
+        COUNTROWS ( fact_attribute_changes )
+
+    MEASURE '_Measures'[Data Corrections] =
+        CALCULATE ( [Attribute Changes], fact_attribute_changes[is_correction] = TRUE () )
+
+    MEASURE '_Measures'[Correction Share] =
+        DIVIDE ( [Data Corrections], [Attribute Changes] )
+
+EVALUATE
+    ROW (
+        "Total Employees", [Total Employees],
+        "Active Employees", [Active Employees],
+        "Active Identities", [Active Identities],
+        "Leavers With Access Remaining", [Leavers With Access Remaining],
+        "Sync Runs", [Sync Runs],
+        "Sync Success Rate", [Sync Success Rate],
+        "Workflow Count", [Workflow Count],
+        "Workflow Failure Rate", [Workflow Failure Rate],
+        "Open DQ Issues", [Open DQ Issues],
+        "Avg Days to Resolve", [Avg Days to Resolve]
+    )

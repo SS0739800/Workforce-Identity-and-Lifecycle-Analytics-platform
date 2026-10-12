@@ -1,0 +1,168 @@
+table dim_employee
+	lineageTag: a7c908a0-b712-4825-8ace-0c37ae3442a8
+
+	column employee_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 72df212b-6ffd-452d-87b9-b1caed0ff3e6
+		summarizeBy: none
+		sourceColumn: employee_key
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column hr_employee_id
+		dataType: string
+		lineageTag: 69622846-2a1d-4903-bf05-4a0d41201d6e
+		summarizeBy: none
+		sourceColumn: hr_employee_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column employee_name
+		dataType: string
+		lineageTag: 0304b5b6-29f4-4b06-ac36-6a8ac7a6bc91
+		summarizeBy: none
+		sourceColumn: employee_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column department
+		dataType: string
+		lineageTag: f4019b2a-2f1c-4c67-85a6-0148436f84ac
+		summarizeBy: none
+		sourceColumn: department
+
+		annotation SummarizationSetBy = Automatic
+
+	column job_title
+		dataType: string
+		lineageTag: 0023437a-286a-428f-8404-4e1997c7294c
+		summarizeBy: none
+		sourceColumn: job_title
+
+		annotation SummarizationSetBy = Automatic
+
+	column location
+		dataType: string
+		lineageTag: fd47fa81-0c51-4e8b-9367-de664d115beb
+		summarizeBy: none
+		sourceColumn: location
+
+		annotation SummarizationSetBy = Automatic
+
+	column employment_type
+		dataType: string
+		lineageTag: 4c367168-b4ce-4d99-beb7-cb137242b529
+		summarizeBy: none
+		sourceColumn: employment_type
+
+		annotation SummarizationSetBy = Automatic
+
+	column employment_status
+		dataType: string
+		lineageTag: f6cc49ec-2aac-48ea-becd-42974f20b24a
+		summarizeBy: none
+		sourceColumn: employment_status
+
+		annotation SummarizationSetBy = Automatic
+
+	column leave_status
+		dataType: string
+		lineageTag: 46989300-d130-4f35-824e-fedadfb2436c
+		summarizeBy: none
+		sourceColumn: leave_status
+
+		annotation SummarizationSetBy = Automatic
+
+	column hire_date
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: 40ac07ec-0575-4c3d-87df-107aec1e038b
+		summarizeBy: none
+		sourceColumn: hire_date
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column termination_date
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: 6a99a407-cac3-4acd-b2ad-9a97aa927664
+		summarizeBy: none
+		sourceColumn: termination_date
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column manager_name
+		dataType: string
+		lineageTag: 6de14b84-8bc4-46a9-8e56-6df5a19ef717
+		summarizeBy: none
+		sourceColumn: manager_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column account_status
+		dataType: string
+		lineageTag: 6785982e-d3af-4c7b-b6ae-7a251eb8fca6
+		summarizeBy: none
+		sourceColumn: account_status
+
+		annotation SummarizationSetBy = Automatic
+
+	column has_access_after_termination
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: e396cc87-3815-4e1c-8e05-7f08d21b57fd
+		summarizeBy: none
+		sourceColumn: has_access_after_termination
+
+		annotation SummarizationSetBy = Automatic
+
+	column open_dq_issues
+		dataType: int64
+		formatString: 0
+		lineageTag: dfb0a444-f491-4157-a40f-8e812aabb70c
+		summarizeBy: sum
+		sourceColumn: open_dq_issues
+
+		annotation SummarizationSetBy = Automatic
+
+	partition dim_employee = m
+		mode: import
+		source =
+				// dim_employee: current HR state per employee (no email). Key: employee_key.
+				let
+				    Source = PostgreSQL.Database(DatabaseServer, DatabaseName),
+				    View = Source{[Schema = "reporting", Item = "dim_employee"]}[Data],
+				    Typed = Table.TransformColumnTypes(View, {
+				        {"employee_key", Int64.Type},
+				        {"hr_employee_id", type text},
+				        {"employee_name", type text},
+				        {"department", type text},
+				        {"job_title", type text},
+				        {"location", type text},
+				        {"employment_type", type text},
+				        {"employment_status", type text},
+				        {"leave_status", type text},
+				        {"hire_date", type date},
+				        {"termination_date", type date},
+				        {"manager_name", type text},
+				        {"account_status", type text},
+				        {"has_access_after_termination", type logical},
+				        {"open_dq_issues", Int64.Type}
+				    }),
+				    // A blank HR employee ID is a data-quality finding; show it explicitly in tables and slicers.
+				    LabelledIds = Table.ReplaceValue(Typed, null, "(missing)", Replacer.ReplaceValue, {"hr_employee_id"})
+				in
+				    LabelledIds
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

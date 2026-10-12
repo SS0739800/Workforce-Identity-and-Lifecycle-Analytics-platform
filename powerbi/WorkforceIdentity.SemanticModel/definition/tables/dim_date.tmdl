@@ -1,0 +1,131 @@
+table dim_date
+	lineageTag: 0ea59b42-05b3-4b11-aaec-8534b6e6e1f7
+	dataCategory: Time
+
+	column date
+		dataType: dateTime
+		isKey
+		formatString: Long Date
+		lineageTag: be0cbec6-bae5-4b1e-9482-a32e28a564fb
+		summarizeBy: none
+		sourceColumn: date
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column year
+		dataType: int64
+		formatString: 0
+		lineageTag: 8400a0a4-97a5-46ed-b9ce-378f1f2b14b2
+		summarizeBy: sum
+		sourceColumn: year
+
+		annotation SummarizationSetBy = Automatic
+
+	column quarter
+		dataType: int64
+		formatString: 0
+		lineageTag: cdf844b5-632e-487d-ae25-f3d4418dee9f
+		summarizeBy: sum
+		sourceColumn: quarter
+
+		annotation SummarizationSetBy = Automatic
+
+	column quarter_label
+		dataType: string
+		lineageTag: b25aa059-21ac-4446-a726-b79dbc70c267
+		summarizeBy: none
+		sourceColumn: quarter_label
+		sortByColumn: quarter_start
+
+		changedProperty = SortByColumn
+
+		annotation SummarizationSetBy = Automatic
+
+	column quarter_start
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: dd8aafee-4ab5-4d99-95b3-2df34fbecad5
+		summarizeBy: none
+		sourceColumn: quarter_start
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column month_number
+		dataType: int64
+		formatString: 0
+		lineageTag: 5d6d1c95-d8a5-46b1-badf-425038fdd647
+		summarizeBy: sum
+		sourceColumn: month_number
+
+		annotation SummarizationSetBy = Automatic
+
+	column month_start
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: 1e6d4365-4cea-4800-acc9-73e2e442a507
+		summarizeBy: none
+		sourceColumn: month_start
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column month_label
+		dataType: string
+		lineageTag: 8ea920d8-8df0-49a5-b21d-ace7fb85e57e
+		summarizeBy: none
+		sourceColumn: month_label
+		sortByColumn: month_start
+
+		changedProperty = SortByColumn
+
+		annotation SummarizationSetBy = Automatic
+
+	column day_of_week
+		dataType: int64
+		formatString: 0
+		lineageTag: 3a216cb0-ee73-4445-beba-00cb4edbdca2
+		summarizeBy: sum
+		sourceColumn: day_of_week
+
+		annotation SummarizationSetBy = Automatic
+
+	column is_weekday
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: efc79539-aeec-4866-a73d-cb261bca4313
+		summarizeBy: none
+		sourceColumn: is_weekday
+
+		annotation SummarizationSetBy = Automatic
+
+	partition dim_date = m
+		mode: import
+		source =
+				// dim_date: one row per calendar day. Mark as the model's date table (column: date).
+				let
+				    Source = PostgreSQL.Database(DatabaseServer, DatabaseName),
+				    View = Source{[Schema = "reporting", Item = "dim_date"]}[Data],
+				    Typed = Table.TransformColumnTypes(View, {
+				        {"date", type date},
+				        {"year", Int64.Type},
+				        {"quarter", Int64.Type},
+				        {"quarter_label", type text},
+				        {"quarter_start", type date},
+				        {"month_number", Int64.Type},
+				        {"month_start", type date},
+				        {"month_label", type text},
+				        {"day_of_week", Int64.Type},
+				        {"is_weekday", type logical}
+				    })
+				in
+				    Typed
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

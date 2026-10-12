@@ -1,0 +1,94 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.13.0/schema.json",
+  "name": "39609736ef7ff996d651",
+  "position": {
+    "x": 0,
+    "y": 90,
+    "z": 5,
+    "height": 120,
+    "width": 1920,
+    "tabOrder": 5
+  },
+  "visual": {
+    "visualType": "cardVisual",
+    "query": {
+      "queryState": {
+        "Data": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Measures"
+                    }
+                  },
+                  "Property": "Sync Runs"
+                }
+              },
+              "queryRef": "_Measures.Sync Runs",
+              "nativeQueryRef": "Sync Runs"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Measures"
+                    }
+                  },
+                  "Property": "Failed Sync Runs"
+                }
+              },
+              "queryRef": "_Measures.Failed Sync Runs",
+              "nativeQueryRef": "Failed Sync Runs"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Measures"
+                    }
+                  },
+                  "Property": "Sync Record Attempts"
+                }
+              },
+              "queryRef": "_Measures.Sync Record Attempts",
+              "nativeQueryRef": "Sync Record Attempts"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Measures"
+                    }
+                  },
+                  "Property": "Sync Success Rate"
+                }
+              },
+              "queryRef": "_Measures.Sync Success Rate",
+              "nativeQueryRef": "Sync Success Rate"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Measures"
+                    }
+                  },
+                  "Property": "Avg Sync Run Duration (s)"
+                }
+              },
+              "queryRef": "_Measures.Avg Sync Run Duration (s)",
+              "nativeQueryRef": "Avg Sync Run Duration (s)"
+            }
+          ]
+        }
+      }
+    },
+    "drillFilterOtherVisuals": true
+  }
+}

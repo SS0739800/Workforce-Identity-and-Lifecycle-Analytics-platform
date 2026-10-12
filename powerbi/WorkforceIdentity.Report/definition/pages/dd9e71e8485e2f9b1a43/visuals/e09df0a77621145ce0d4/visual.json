@@ -1,0 +1,38 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.13.0/schema.json",
+  "name": "e09df0a77621145ce0d4",
+  "position": {
+    "x": 0,
+    "y": 1015,
+    "z": 10,
+    "height": 65,
+    "width": 960,
+    "tabOrder": 10
+  },
+  "visual": {
+    "visualType": "textbox",
+    "objects": {
+      "general": [
+        {
+          "properties": {
+            "paragraphs": [
+              {
+                "textRuns": [
+                  {
+                    "value": "Records with an open data-quality issue fail to sync far more often. In this synthetic dataset that link is built in (the sync validates the same rules the scan checks), so this shows an association, not a measured cause.",
+                    "textStyle": {
+                      "fontStyle": "italic",
+                      "fontSize": "10pt",
+                      "color": "#605e5c"
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "drillFilterOtherVisuals": true
+  }
+}

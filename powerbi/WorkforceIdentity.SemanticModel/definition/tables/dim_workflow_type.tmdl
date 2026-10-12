@@ -1,0 +1,54 @@
+table dim_workflow_type
+	lineageTag: 042c4d27-094e-44ae-bb02-254387c108a5
+
+	column workflow_type
+		dataType: string
+		lineageTag: 094731a9-e1dc-47f0-a8a9-a4f157a661e7
+		summarizeBy: none
+		sourceColumn: workflow_type
+
+		annotation SummarizationSetBy = Automatic
+
+	column workflow_label
+		dataType: string
+		lineageTag: 5f2b42dc-247e-49ee-a412-02a64ac1eded
+		summarizeBy: none
+		sourceColumn: workflow_label
+		sortByColumn: sort_order
+
+		changedProperty = SortByColumn
+
+		annotation SummarizationSetBy = Automatic
+
+	column sort_order
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 478d3e6f-aeff-4068-a75f-7fb3f285535b
+		summarizeBy: sum
+		sourceColumn: sort_order
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	partition dim_workflow_type = m
+		mode: import
+		source =
+				// dim_workflow_type: the four lifecycle workflows. Relates to fact_workflow_runs and
+				// fact_workflow_actions on workflow_type, so one slicer filters both. Sort workflow_label by sort_order.
+				let
+				    Source = PostgreSQL.Database(DatabaseServer, DatabaseName),
+				    View = Source{[Schema = "reporting", Item = "dim_workflow_type"]}[Data],
+				    Typed = Table.TransformColumnTypes(View, {
+				        {"workflow_type", type text},
+				        {"workflow_label", type text},
+				        {"sort_order", Int64.Type}
+				    })
+				in
+				    Typed
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

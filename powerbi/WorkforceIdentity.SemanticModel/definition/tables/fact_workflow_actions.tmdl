@@ -1,0 +1,140 @@
+table fact_workflow_actions
+	lineageTag: 6e522ee6-6f4b-432f-a9e3-4d87fe8ab4c1
+
+	column action_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: a35d5445-1da6-4155-a2e2-f73faf473ad4
+		summarizeBy: sum
+		sourceColumn: action_key
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column workflow_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: c653316d-426d-4f1b-b67e-9004b636c32c
+		summarizeBy: sum
+		sourceColumn: workflow_key
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column employee_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 8cbfa04b-4353-4bd3-a358-7dd2d5e39cf0
+		summarizeBy: none
+		sourceColumn: employee_key
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column date
+		dataType: dateTime
+		isHidden
+		formatString: Long Date
+		lineageTag: 43b6851e-8eb9-404c-a757-676e1f2fe05b
+		summarizeBy: none
+		sourceColumn: date
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column workflow_type
+		dataType: string
+		lineageTag: 61aaf198-7bfb-4134-b40d-b59cf8184ae2
+		summarizeBy: none
+		sourceColumn: workflow_type
+
+		annotation SummarizationSetBy = Automatic
+
+	column action_type
+		dataType: string
+		lineageTag: 6a14cdcd-600e-42e1-aa43-be1ed00a1588
+		summarizeBy: none
+		sourceColumn: action_type
+
+		annotation SummarizationSetBy = Automatic
+
+	column target_name
+		dataType: string
+		lineageTag: 7ef5045e-48d7-49bb-b402-823089cb59fa
+		summarizeBy: none
+		sourceColumn: target_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column status
+		dataType: string
+		lineageTag: cfa1d776-6a3e-47ba-a6e8-b172ab07bf39
+		summarizeBy: none
+		sourceColumn: status
+
+		annotation SummarizationSetBy = Automatic
+
+	column is_attempt
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: 07b5c44a-a29b-4449-a84b-ca3e9a244232
+		summarizeBy: none
+		sourceColumn: is_attempt
+
+		annotation SummarizationSetBy = Automatic
+
+	column error_type
+		dataType: string
+		lineageTag: 00c545b4-ce41-4a58-9463-570294069cb3
+		summarizeBy: none
+		sourceColumn: error_type
+
+		annotation SummarizationSetBy = Automatic
+
+	column duration_seconds
+		dataType: double
+		lineageTag: 083e330b-2f40-47a8-b3d3-ff34a06119a6
+		summarizeBy: sum
+		sourceColumn: duration_seconds
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	partition fact_workflow_actions = m
+		mode: import
+		source =
+				// fact_workflow_actions: one row per workflow step. Carries workflow_type and employee_key
+				// itself, so it relates directly to dim_date (date) and dim_employee (employee_key).
+				let
+				    Source = PostgreSQL.Database(DatabaseServer, DatabaseName),
+				    View = Source{[Schema = "reporting", Item = "fact_workflow_actions"]}[Data],
+				    Typed = Table.TransformColumnTypes(View, {
+				        {"action_key", Int64.Type},
+				        {"workflow_key", Int64.Type},
+				        {"employee_key", Int64.Type},
+				        {"date", type date},
+				        {"workflow_type", type text},
+				        {"action_type", type text},
+				        {"target_name", type text},
+				        {"status", type text},
+				        {"is_attempt", type logical},
+				        {"error_type", type text},
+				        {"duration_seconds", type number}
+				    })
+				in
+				    Typed
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

@@ -1,0 +1,214 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.13.0/schema.json",
+  "name": "b9d5a55ddb67f4a8e409",
+  "position": {
+    "x": 0,
+    "y": 165.03805402178779,
+    "z": 4,
+    "height": 146.70049246381137,
+    "width": 1919.3314430681987,
+    "tabOrder": 4
+  },
+  "visual": {
+    "visualType": "cardVisual",
+    "query": {
+      "queryState": {
+        "Data": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Measures"
+                    }
+                  },
+                  "Property": "Active Employees"
+                }
+              },
+              "queryRef": "_Measures.Active Employees",
+              "nativeQueryRef": "Active Employees"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Measures"
+                    }
+                  },
+                  "Property": "Active Identities"
+                }
+              },
+              "queryRef": "_Measures.Active Identities",
+              "nativeQueryRef": "Active Identities"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Measures"
+                    }
+                  },
+                  "Property": "Sync Success Rate"
+                }
+              },
+              "queryRef": "_Measures.Sync Success Rate",
+              "nativeQueryRef": "Sync Success Rate"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Measures"
+                    }
+                  },
+                  "Property": "Workflow Failure Rate"
+                }
+              },
+              "queryRef": "_Measures.Workflow Failure Rate",
+              "nativeQueryRef": "Workflow Failure Rate"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Measures"
+                    }
+                  },
+                  "Property": "Open DQ Issues"
+                }
+              },
+              "queryRef": "_Measures.Open DQ Issues",
+              "nativeQueryRef": "Open DQ Issues"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Measures"
+                    }
+                  },
+                  "Property": "Leavers With Access Remaining"
+                }
+              },
+              "queryRef": "_Measures.Leavers With Access Remaining",
+              "nativeQueryRef": "Leavers With Access Remaining"
+            }
+          ]
+        }
+      },
+      "sortDefinition": {
+        "sort": [
+          {
+            "field": {
+              "Measure": {
+                "Expression": {
+                  "SourceRef": {
+                    "Entity": "_Measures"
+                  }
+                },
+                "Property": "Active Employees"
+              }
+            },
+            "direction": "Descending"
+          }
+        ],
+        "isDefaultSort": true
+      }
+    },
+    "drillFilterOtherVisuals": true
+  },
+  "filterConfig": {
+    "filters": [
+      {
+        "name": "3b49d332a40f0d6a4346",
+        "field": {
+          "Measure": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "_Measures"
+              }
+            },
+            "Property": "Active Employees"
+          }
+        },
+        "type": "Advanced"
+      },
+      {
+        "name": "c8b31873a91c27d47729",
+        "field": {
+          "Measure": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "_Measures"
+              }
+            },
+            "Property": "Active Identities"
+          }
+        },
+        "type": "Advanced"
+      },
+      {
+        "name": "f525c6bf67f37e8d1cc3",
+        "field": {
+          "Measure": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "_Measures"
+              }
+            },
+            "Property": "Sync Success Rate"
+          }
+        },
+        "type": "Advanced"
+      },
+      {
+        "name": "f234631bffd992fa3ff1",
+        "field": {
+          "Measure": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "_Measures"
+              }
+            },
+            "Property": "Workflow Failure Rate"
+          }
+        },
+        "type": "Advanced"
+      },
+      {
+        "name": "1016710bf7c6e493217b",
+        "field": {
+          "Measure": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "_Measures"
+              }
+            },
+            "Property": "Open DQ Issues"
+          }
+        },
+        "type": "Advanced"
+      },
+      {
+        "name": "5649aef30768c3f6a961",
+        "field": {
+          "Measure": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "_Measures"
+              }
+            },
+            "Property": "Leavers With Access Remaining"
+          }
+        },
+        "type": "Advanced"
+      }
+    ]
+  }
+}

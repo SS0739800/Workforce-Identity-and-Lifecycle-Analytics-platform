@@ -1,0 +1,88 @@
+table fact_attribute_changes
+	lineageTag: 799a6bc0-e627-40de-a55b-7037cd3d80cc
+
+	column change_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 1cf76157-1796-4698-94d3-d264fe358255
+		summarizeBy: sum
+		sourceColumn: change_key
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column employee_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: a92d4639-d6a4-4b45-b9e1-47631dc8ddeb
+		summarizeBy: none
+		sourceColumn: employee_key
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column date
+		dataType: dateTime
+		isHidden
+		formatString: Long Date
+		lineageTag: 18316324-300b-4176-a122-140332b8df83
+		summarizeBy: none
+		sourceColumn: date
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column attribute_name
+		dataType: string
+		lineageTag: bfd8b8a0-0686-494e-a6a6-3804cb275134
+		summarizeBy: none
+		sourceColumn: attribute_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column source
+		dataType: string
+		lineageTag: 44a13332-714c-4b4c-9cac-987532b4f21b
+		summarizeBy: none
+		sourceColumn: source
+
+		annotation SummarizationSetBy = Automatic
+
+	column is_correction
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: 5e676599-b47e-4086-bd79-b0a11c247f67
+		summarizeBy: none
+		sourceColumn: is_correction
+
+		annotation SummarizationSetBy = Automatic
+
+	partition fact_attribute_changes = m
+		mode: import
+		source =
+				// fact_attribute_changes: one row per HR attribute change.
+				let
+				    Source = PostgreSQL.Database(DatabaseServer, DatabaseName),
+				    View = Source{[Schema = "reporting", Item = "fact_attribute_changes"]}[Data],
+				    Typed = Table.TransformColumnTypes(View, {
+				        {"change_key", Int64.Type},
+				        {"employee_key", Int64.Type},
+				        {"date", type date},
+				        {"attribute_name", type text},
+				        {"source", type text},
+				        {"is_correction", type logical}
+				    })
+				in
+				    Typed
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

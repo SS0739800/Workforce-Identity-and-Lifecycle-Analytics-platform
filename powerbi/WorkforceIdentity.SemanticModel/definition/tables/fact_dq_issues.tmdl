@@ -1,0 +1,124 @@
+table fact_dq_issues
+	lineageTag: fc830a18-b5f7-4bef-9b17-3e34bef4c393
+
+	column issue_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: e5cb576d-184f-4ef3-9b1b-6b2192a1bacc
+		summarizeBy: sum
+		sourceColumn: issue_key
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column employee_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 1137e4c6-ae3b-4d1b-88d4-87ab14d7fc67
+		summarizeBy: none
+		sourceColumn: employee_key
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column detected_date
+		dataType: dateTime
+		isHidden
+		formatString: Long Date
+		lineageTag: 53fcc312-6989-4f2d-99cd-a01dffeb2ca8
+		summarizeBy: none
+		sourceColumn: detected_date
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column resolved_date
+		dataType: dateTime
+		isHidden
+		formatString: Long Date
+		lineageTag: 10ea5af3-c468-44f7-a259-868bef90ca92
+		summarizeBy: none
+		sourceColumn: resolved_date
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column issue_type
+		dataType: string
+		lineageTag: a2694973-0372-4acb-af71-4ce5c397672b
+		summarizeBy: none
+		sourceColumn: issue_type
+
+		annotation SummarizationSetBy = Automatic
+
+	column field_name
+		dataType: string
+		lineageTag: 5de80dde-e0a6-4f9f-b476-34589439660a
+		summarizeBy: none
+		sourceColumn: field_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column severity
+		dataType: string
+		lineageTag: 750bac57-2351-4daf-9ec5-44d3dd2609b9
+		summarizeBy: none
+		sourceColumn: severity
+
+		annotation SummarizationSetBy = Automatic
+
+	column status
+		dataType: string
+		lineageTag: c01e8fb8-1c7a-488c-96df-418a54bfeaf3
+		summarizeBy: none
+		sourceColumn: status
+
+		annotation SummarizationSetBy = Automatic
+
+	column days_to_resolve
+		dataType: double
+		lineageTag: 888515d5-2d16-4f3b-87f9-fd04efe1255d
+		summarizeBy: sum
+		sourceColumn: days_to_resolve
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	partition fact_dq_issues = m
+		mode: import
+		source =
+				// fact_dq_issues: one row per data-quality issue.
+				// detected_date -> dim_date is the active relationship; resolved_date -> dim_date is inactive
+				// and used only by the "Issues Resolved (by resolved date)" measure.
+				let
+				    Source = PostgreSQL.Database(DatabaseServer, DatabaseName),
+				    View = Source{[Schema = "reporting", Item = "fact_dq_issues"]}[Data],
+				    Typed = Table.TransformColumnTypes(View, {
+				        {"issue_key", Int64.Type},
+				        {"employee_key", Int64.Type},
+				        {"detected_date", type date},
+				        {"resolved_date", type date},
+				        {"issue_type", type text},
+				        {"field_name", type text},
+				        {"severity", type text},
+				        {"status", type text},
+				        {"days_to_resolve", type number}
+				    })
+				in
+				    Typed
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

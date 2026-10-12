@@ -1,0 +1,108 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.13.0/schema.json",
+  "name": "09b45f2bb42ad36aca77",
+  "position": {
+    "x": 0,
+    "y": 90,
+    "z": 4,
+    "height": 120,
+    "width": 1920,
+    "tabOrder": 4
+  },
+  "visual": {
+    "visualType": "cardVisual",
+    "query": {
+      "queryState": {
+        "Data": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Measures"
+                    }
+                  },
+                  "Property": "DQ Issues"
+                }
+              },
+              "queryRef": "_Measures.DQ Issues",
+              "nativeQueryRef": "DQ Issues"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Measures"
+                    }
+                  },
+                  "Property": "Open DQ Issues"
+                }
+              },
+              "queryRef": "_Measures.Open DQ Issues",
+              "nativeQueryRef": "Open DQ Issues"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Measures"
+                    }
+                  },
+                  "Property": "Resolved DQ Issues"
+                }
+              },
+              "queryRef": "_Measures.Resolved DQ Issues",
+              "nativeQueryRef": "Resolved DQ Issues"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Measures"
+                    }
+                  },
+                  "Property": "Open Critical DQ Issues"
+                }
+              },
+              "queryRef": "_Measures.Open Critical DQ Issues",
+              "nativeQueryRef": "Open Critical DQ Issues"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Measures"
+                    }
+                  },
+                  "Property": "Employees With Open Issues"
+                }
+              },
+              "queryRef": "_Measures.Employees With Open Issues",
+              "nativeQueryRef": "Employees With Open Issues"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Measures"
+                    }
+                  },
+                  "Property": "Avg Days to Resolve"
+                }
+              },
+              "queryRef": "_Measures.Avg Days to Resolve",
+              "nativeQueryRef": "Avg Days to Resolve"
+            }
+          ]
+        }
+      }
+    },
+    "drillFilterOtherVisuals": true
+  }
+}

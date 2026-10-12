@@ -1,0 +1,303 @@
+table _Measures
+	lineageTag: 4c58387a-8da1-4eaa-9d16-d370649edb49
+
+	measure 'Total Employees' = ```
+			
+			        COUNTROWS ( dim_employee )
+			```
+		formatString: 0
+		lineageTag: f126734f-3c76-4f15-aea3-6f69c9d43bbf
+
+	measure 'Active Employees' = ```
+			
+			        CALCULATE ( [Total Employees], dim_employee[employment_status] = "active" )
+			```
+		formatString: 0
+		lineageTag: 28c3ed24-a6a0-4a47-830d-68b233333d51
+
+	measure 'Active Identities' = ```
+			
+			        CALCULATE ( [Total Employees], dim_employee[account_status] = "active" )
+			```
+		formatString: 0
+		lineageTag: bd1dd218-18c5-4bb4-997f-443a4004730c
+
+	measure 'Leavers With Access Remaining' = ```
+			
+			        CALCULATE ( [Total Employees], dim_employee[has_access_after_termination] = TRUE () )
+			```
+		formatString: 0
+		lineageTag: 80ec1f14-957c-41bb-8cb5-8cf548d67894
+
+	measure 'Sync Runs' = ```
+			
+			        COUNTROWS ( fact_sync_runs )
+			```
+		formatString: 0
+		lineageTag: b5712378-eb95-4af1-a87b-948ecd53aacf
+
+	measure 'Failed Sync Runs' = ```
+			
+			        CALCULATE ( [Sync Runs], fact_sync_runs[status] = "failed" )
+			```
+		formatString: 0
+		lineageTag: 3b89c6de-e4b7-4c21-a513-dc3ffe3115be
+
+	measure 'Sync Run Success Rate' = ```
+			
+			        DIVIDE ( [Sync Runs] - [Failed Sync Runs], [Sync Runs] )
+			```
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 1bda2bb4-36ef-4630-bade-454152105a6e
+
+	measure 'Records Evaluated' = ```
+			
+			        SUM ( fact_sync_runs[total_records] )
+			```
+		formatString: 0
+		lineageTag: cda2f0a4-cc8b-4cb4-adcf-407ba92dfd7b
+
+	measure 'Sync Record Attempts' = ```
+			
+			        COUNTROWS ( fact_sync_records )
+			```
+		formatString: 0
+		lineageTag: b8352d4b-2e32-4eb7-9cd7-eedf05dfb230
+
+	measure 'Sync Records Updated' = ```
+			
+			        CALCULATE ( [Sync Record Attempts], fact_sync_records[status] = "success" )
+			```
+		formatString: 0
+		lineageTag: d83c2058-4ac7-4210-92a8-174590b91367
+
+	measure 'Sync Records Failed' = ```
+			
+			        CALCULATE ( [Sync Record Attempts], fact_sync_records[status] = "failed" )
+			```
+		formatString: 0
+		lineageTag: c21dae97-ab92-4f34-9c77-0f3853ccaeeb
+
+	measure 'Sync Success Rate' = ```
+			
+			        DIVIDE ( [Sync Records Updated], [Sync Record Attempts] )
+			```
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 6041560e-c028-4d6f-84e8-4c00b18dd8d9
+
+	measure 'Sync Failure Rate' = ```
+			
+			        DIVIDE ( [Sync Records Failed], [Sync Record Attempts] )
+			```
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 2fe797f3-6ea8-43e3-8376-68e13f2248c3
+
+	measure 'Avg Sync Run Duration (s)' = ```
+			
+			        AVERAGE ( fact_sync_runs[duration_seconds] )
+			```
+		lineageTag: 25350011-f99c-4a99-806b-49e7920287a5
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Workflow Count' = ```
+			
+			        COUNTROWS ( fact_workflow_runs )
+			```
+		formatString: 0
+		lineageTag: 12083405-ee3b-4b7a-93af-a661a31d4657
+
+	measure 'Completed Workflows' = ```
+			
+			        CALCULATE ( [Workflow Count], fact_workflow_runs[status] = "completed" )
+			```
+		formatString: 0
+		lineageTag: 653b99e6-6f6a-437b-a981-31f9676e2a5e
+
+	measure 'Failed Workflows' = ```
+			
+			        CALCULATE ( [Workflow Count], fact_workflow_runs[status] = "failed" )
+			```
+		formatString: 0
+		lineageTag: 51659c00-f926-44f4-b9e1-abb9abee9a91
+
+	measure 'Pending Workflows' = ```
+			
+			        CALCULATE ( [Workflow Count], fact_workflow_runs[status] = "pending" )
+			```
+		formatString: 0
+		lineageTag: f60a0877-3890-4303-8725-52ffc6574960
+
+	measure 'Workflow Success Rate' = ```
+			
+			        DIVIDE ( [Completed Workflows], [Completed Workflows] + [Failed Workflows] )
+			```
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 08455cd9-75f0-4807-a27f-7e8ce387ec1e
+
+	measure 'Workflow Failure Rate' = ```
+			
+			        DIVIDE ( [Failed Workflows], [Completed Workflows] + [Failed Workflows] )
+			```
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: c47438ce-2925-4060-9faf-a482a98f27e6
+
+	measure 'Service Desk Reruns' = ```
+			
+			        CALCULATE ( [Workflow Count], fact_workflow_runs[is_rerun] = TRUE () )
+			```
+		formatString: 0
+		lineageTag: 5fed8b32-620b-4bb8-ac50-41c5199df456
+
+	measure 'Avg Workflow Duration (s)' = ```
+			
+			        AVERAGE ( fact_workflow_runs[duration_seconds] )
+			```
+		lineageTag: 143ae0a0-bf72-45f5-b45a-fc2afd24049c
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'First-Time Offboarding Success Rate' = ```
+			
+			        VAR FirstAttempts =
+			            CALCULATE (
+			                [Workflow Count],
+			                fact_workflow_runs[workflow_type] = "offboarding",
+			                fact_workflow_runs[is_rerun] = FALSE (),
+			                fact_workflow_runs[status] IN { "completed", "failed" }
+			            )
+			        VAR Succeeded =
+			            CALCULATE (
+			                [Workflow Count],
+			                fact_workflow_runs[workflow_type] = "offboarding",
+			                fact_workflow_runs[is_rerun] = FALSE (),
+			                fact_workflow_runs[status] = "completed"
+			            )
+			        RETURN
+			            DIVIDE ( Succeeded, FirstAttempts )
+			```
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: a70111de-6c59-41c1-8ff3-49d68acf0ee0
+
+	measure 'Action Attempts' = ```
+			
+			        CALCULATE ( COUNTROWS ( fact_workflow_actions ), fact_workflow_actions[is_attempt] = TRUE () )
+			```
+		formatString: 0
+		lineageTag: 3acb7c7f-8297-47c4-ab98-5d695b5d6d1b
+
+	measure 'Failed Actions' = ```
+			
+			        CALCULATE ( COUNTROWS ( fact_workflow_actions ), fact_workflow_actions[status] = "failed" )
+			```
+		formatString: 0
+		lineageTag: fc929630-a90b-46ff-b6a7-8da411e97c8b
+
+	measure 'Action Failure Rate' = ```
+			
+			        DIVIDE ( [Failed Actions], [Action Attempts] )
+			```
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 692c2537-ff83-4aa0-b2c9-9b7e04c6a77c
+
+		changedProperty = IsHidden
+
+	measure 'DQ Issues' = ```
+			
+			        COUNTROWS ( fact_dq_issues )
+			```
+		formatString: 0
+		lineageTag: 31959726-aa44-415e-8ca1-c2189ddd5bc7
+
+	measure 'Open DQ Issues' = ```
+			
+			        CALCULATE ( [DQ Issues], fact_dq_issues[status] = "open" )
+			```
+		formatString: 0
+		lineageTag: e662c91f-9a6c-4338-b71a-7b73308c42ea
+
+	measure 'Resolved DQ Issues' = ```
+			
+			        CALCULATE ( [DQ Issues], fact_dq_issues[status] = "resolved" )
+			```
+		formatString: 0
+		lineageTag: a771196c-ee5d-4715-a353-9b1adf8d6dfd
+
+	measure 'Open Critical DQ Issues' = ```
+			
+			        CALCULATE ( [Open DQ Issues], fact_dq_issues[severity] = "critical" )
+			```
+		formatString: 0
+		lineageTag: 76e9b969-11c3-4e9b-b3ff-daa4514f3eb6
+
+	measure 'Employees With Open Issues' = ```
+			
+			        CALCULATE ( DISTINCTCOUNT ( fact_dq_issues[employee_key] ), fact_dq_issues[status] = "open" )
+			```
+		formatString: 0
+		lineageTag: 0785bf20-dfa1-4c35-a0b5-82b5fa306200
+
+	measure 'Avg Days to Resolve' = ```
+			
+			        AVERAGE ( fact_dq_issues[days_to_resolve] )
+			```
+		lineageTag: 40b018ed-ca32-4450-aa0a-40c388e1586e
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Issues Resolved (by resolved date)' = ```
+			
+			        CALCULATE (
+			            COUNTROWS ( fact_dq_issues ),
+			            USERELATIONSHIP ( fact_dq_issues[resolved_date], dim_date[date] ),
+			            NOT ISBLANK ( fact_dq_issues[resolved_date] )
+			        )
+			```
+		formatString: 0
+		lineageTag: cd3ec4bd-aac2-48ae-9072-25ea1a1644e9
+
+	measure 'Attribute Changes' = ```
+			
+			        COUNTROWS ( fact_attribute_changes )
+			```
+		formatString: 0
+		lineageTag: 2b5eb2e9-81e6-4efa-8f4e-41754f09c946
+
+	measure 'Data Corrections' = ```
+			
+			        CALCULATE ( [Attribute Changes], fact_attribute_changes[is_correction] = TRUE () )
+			```
+		formatString: 0
+		lineageTag: 3cf5e696-902a-4a9d-9949-7fc1f44ca2c8
+
+	measure 'Correction Share' = ```
+			
+			        DIVIDE ( [Data Corrections], [Attribute Changes] )
+			```
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 0748c07b-56f5-4e0e-8eb2-7d720dc6a5f7
+
+	column Column1
+		dataType: string
+		isHidden
+		lineageTag: d7dbbc60-7c43-48b7-b67c-45d5b2b10238
+		summarizeBy: none
+		sourceColumn: Column1
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	partition _Measures = m
+		mode: import
+		source =
+				let
+				    Source = Table.FromRows(Json.Document(Binary.Decompress(Binary.FromText("i44FAA==", BinaryEncoding.Base64), Compression.Deflate)), let _t = ((type nullable text) meta [Serialized.Text = true]) in type table [Column1 = _t]),
+				    #"Changed Type" = Table.TransformColumnTypes(Source,{{"Column1", type text}})
+				in
+				    #"Changed Type"
+
+	changedProperty = Name
+
+	annotation PBI_ResultType = Table
+

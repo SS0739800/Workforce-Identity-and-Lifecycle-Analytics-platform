@@ -1,0 +1,113 @@
+table fact_sync_records
+	lineageTag: 56e7f8ae-c9ac-4d6b-86fa-9713d989961c
+
+	column sync_record_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 106b7af6-d91f-4923-8991-a985590a37cb
+		summarizeBy: sum
+		sourceColumn: sync_record_key
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column sync_run_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: ba45d5f9-3b5c-424d-b95b-4a49110f33ec
+		summarizeBy: sum
+		sourceColumn: sync_run_key
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column employee_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 6dfcfa07-d85c-4b48-b44d-914ed0251bf1
+		summarizeBy: none
+		sourceColumn: employee_key
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column date
+		dataType: dateTime
+		isHidden
+		formatString: Long Date
+		lineageTag: 7bc0be6a-c4aa-4b97-aca6-02788331e664
+		summarizeBy: none
+		sourceColumn: date
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column status
+		dataType: string
+		lineageTag: 024395a4-156d-4a36-815d-f1d188426f80
+		summarizeBy: none
+		sourceColumn: status
+
+		annotation SummarizationSetBy = Automatic
+
+	column error_type
+		dataType: string
+		lineageTag: b5a94ae9-8bb7-47f4-a8e4-1802b72264ed
+		summarizeBy: none
+		sourceColumn: error_type
+
+		annotation SummarizationSetBy = Automatic
+
+	column duration_seconds
+		dataType: double
+		lineageTag: 4ae8f989-a037-44ce-aa3c-a6bf24cef84f
+		summarizeBy: sum
+		sourceColumn: duration_seconds
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column had_open_dq_issue
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: a5fc4498-3655-46b0-9d8c-cb03cf4bbf88
+		summarizeBy: none
+		sourceColumn: had_open_dq_issue
+
+		annotation SummarizationSetBy = Automatic
+
+	partition fact_sync_records = m
+		mode: import
+		source =
+				// fact_sync_records: one row per record the sync tried to update (success or failure).
+				// Relates to dim_date on date and dim_employee on employee_key.
+				let
+				    Source = PostgreSQL.Database(DatabaseServer, DatabaseName),
+				    View = Source{[Schema = "reporting", Item = "fact_sync_records"]}[Data],
+				    Typed = Table.TransformColumnTypes(View, {
+				        {"sync_record_key", Int64.Type},
+				        {"sync_run_key", Int64.Type},
+				        {"employee_key", Int64.Type},
+				        {"date", type date},
+				        {"status", type text},
+				        {"error_type", type text},
+				        {"duration_seconds", type number},
+				        {"had_open_dq_issue", type logical}
+				    })
+				in
+				    Typed
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

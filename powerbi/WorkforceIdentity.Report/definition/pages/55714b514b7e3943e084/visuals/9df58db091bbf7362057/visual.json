@@ -1,0 +1,261 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.13.0/schema.json",
+  "name": "9df58db091bbf7362057",
+  "position": {
+    "x": 961.70322837387459,
+    "y": 700.90235288265433,
+    "z": 8,
+    "height": 378.9762721981794,
+    "width": 957.62821469432424,
+    "tabOrder": 8
+  },
+  "visual": {
+    "visualType": "tableEx",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_employee"
+                    }
+                  },
+                  "Property": "employee_name"
+                }
+              },
+              "queryRef": "dim_employee.employee_name",
+              "nativeQueryRef": "employee_name"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_employee"
+                    }
+                  },
+                  "Property": "hr_employee_id"
+                }
+              },
+              "queryRef": "dim_employee.hr_employee_id",
+              "nativeQueryRef": "hr_employee_id"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_employee"
+                    }
+                  },
+                  "Property": "department"
+                }
+              },
+              "queryRef": "dim_employee.department",
+              "nativeQueryRef": "department"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_employee"
+                    }
+                  },
+                  "Property": "termination_date"
+                }
+              },
+              "queryRef": "dim_employee.termination_date",
+              "nativeQueryRef": "termination_date"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_employee"
+                    }
+                  },
+                  "Property": "account_status"
+                }
+              },
+              "queryRef": "dim_employee.account_status",
+              "nativeQueryRef": "account_status"
+            }
+          ]
+        }
+      },
+      "sortDefinition": {
+        "sort": [
+          {
+            "field": {
+              "Column": {
+                "Expression": {
+                  "SourceRef": {
+                    "Entity": "dim_employee"
+                  }
+                },
+                "Property": "termination_date"
+              }
+            },
+            "direction": "Ascending"
+          }
+        ]
+      }
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Leavers with access remaining'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "drillFilterOtherVisuals": true
+  },
+  "filterConfig": {
+    "filters": [
+      {
+        "name": "e6a1c3b1436e6e4f4d92",
+        "field": {
+          "Column": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "dim_employee"
+              }
+            },
+            "Property": "employee_name"
+          }
+        },
+        "type": "Categorical"
+      },
+      {
+        "name": "f752915ff17be3788ce7",
+        "field": {
+          "Column": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "dim_employee"
+              }
+            },
+            "Property": "hr_employee_id"
+          }
+        },
+        "type": "Categorical"
+      },
+      {
+        "name": "87519fbf52abfdb9b65e",
+        "field": {
+          "Column": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "dim_employee"
+              }
+            },
+            "Property": "department"
+          }
+        },
+        "type": "Categorical"
+      },
+      {
+        "name": "777195608516fe33a963",
+        "field": {
+          "Column": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "dim_employee"
+              }
+            },
+            "Property": "termination_date"
+          }
+        },
+        "type": "Categorical"
+      },
+      {
+        "name": "79e8d45181b8608421ec",
+        "field": {
+          "Column": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "dim_employee"
+              }
+            },
+            "Property": "account_status"
+          }
+        },
+        "type": "Categorical"
+      },
+      {
+        "name": "35c72a20dd6c8f79fb56",
+        "field": {
+          "Column": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "dim_employee"
+              }
+            },
+            "Property": "has_access_after_termination"
+          }
+        },
+        "type": "Categorical",
+        "filter": {
+          "Version": 2,
+          "From": [
+            {
+              "Name": "d",
+              "Entity": "dim_employee",
+              "Type": 0
+            }
+          ],
+          "Where": [
+            {
+              "Condition": {
+                "In": {
+                  "Expressions": [
+                    {
+                      "Column": {
+                        "Expression": {
+                          "SourceRef": {
+                            "Source": "d"
+                          }
+                        },
+                        "Property": "has_access_after_termination"
+                      }
+                    }
+                  ],
+                  "Values": [
+                    [
+                      {
+                        "Literal": {
+                          "Value": "true"
+                        }
+                      }
+                    ]
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "howCreated": "User"
+      }
+    ]
+  }
+}

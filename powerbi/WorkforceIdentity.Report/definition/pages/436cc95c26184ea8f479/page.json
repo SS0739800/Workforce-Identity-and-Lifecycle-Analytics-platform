@@ -1,0 +1,8 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/page/2.1.0/schema.json",
+  "name": "436cc95c26184ea8f479",
+  "displayName": "Lifecycle",
+  "displayOption": "FitToPage",
+  "height": 1080,
+  "width": 1920
+}

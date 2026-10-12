@@ -12,9 +12,8 @@ infrastructure or data is used.
 
 > **Status: work in progress.** Phases 1–3 are in place: database, synthetic data, loading,
 > SQL analytics, a REST API, and lifecycle operations (sync, workflows, data-quality scan) that run
-> against the database. For Power BI (Phase 4), the reporting views, Power Query scripts, DAX
-> measures and report design are in place; the report file itself is built in Power BI Desktop
-> and is not in the repository yet. Streamlit, AI and AWS deployment are not implemented yet.
+> against the database, and a four-page Power BI report (Phase 4) saved as a Power BI Project
+> in `powerbi/`. Streamlit, AI and AWS deployment are not implemented yet.
 
 ## What exists so far
 
@@ -25,9 +24,10 @@ infrastructure or data is used.
 - 27 analytical SQL queries covering sync reliability, attribute changes, workflow failures,
   offboarding and access cleanup, and data quality. See [docs/analytics.md](docs/analytics.md).
 - A FastAPI service for employee investigation and analytics.
-- A `reporting` schema of views for Power BI (date, employee and workflow-type dimensions and six
-  fact views), a read-only database login for it, and the Power Query, DAX and page design to
-  build the report. See [powerbi/README.md](powerbi/README.md).
+- A Power BI report with four pages (Overview, Synchronization, Lifecycle, Data Quality), built on a
+  `reporting` schema of views (date, employee and workflow-type dimensions and six fact views) read
+  through a read-only database login. The model, Power Query and 36 DAX measures are stored as text
+  in the repository. See [powerbi/README.md](powerbi/README.md).
 - Lifecycle operations through the API: enter HR changes, run the sync, onboard, offboard,
   handle leave and return, re-run failed workflows, and run the data-quality scan. The simulator
   and the API share the same rules in `app/lifecycle/`. See [docs/operations.md](docs/operations.md).

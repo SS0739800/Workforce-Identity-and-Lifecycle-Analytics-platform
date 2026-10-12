@@ -1,6 +1,7 @@
 // DAX measures for the Workforce Identity & Lifecycle report.
 //
-// Create these in a table called "Measures" (Home > Enter data > an empty table named Measures),
+// Create these in a table called "_Measures" (Home > Enter data > an empty table named _Measures;
+// "Measures" itself is a reserved name in Power BI),
 // one measure per block. The comment above each block is the display folder.
 //
 // Every measure is a count, sum or ratio over one reporting view, so it can be checked against

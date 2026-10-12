@@ -1,0 +1,57 @@
+relationship AutoDetected_9f370172-0d07-4ba9-9318-136a6340777e
+	fromColumn: fact_sync_records.employee_key
+	toColumn: dim_employee.employee_key
+
+relationship AutoDetected_77793a77-fe3a-4950-a26b-f25a87c8a462
+	fromColumn: fact_workflow_runs.employee_key
+	toColumn: dim_employee.employee_key
+
+relationship AutoDetected_1f723ca4-d3df-42f5-82d9-61473225bdbb
+	fromColumn: fact_workflow_actions.employee_key
+	toColumn: dim_employee.employee_key
+
+relationship AutoDetected_c708f4fc-7753-4461-bf18-9e16f8a999b1
+	fromColumn: fact_attribute_changes.employee_key
+	toColumn: dim_employee.employee_key
+
+relationship AutoDetected_9f296ffc-be1b-4d7b-baf0-be69f5acf3f3
+	fromColumn: fact_dq_issues.employee_key
+	toColumn: dim_employee.employee_key
+
+relationship AutoDetected_89637442-e467-4fdf-941a-228058615e0c
+	fromColumn: fact_workflow_runs.workflow_type
+	toColumn: dim_workflow_type.workflow_type
+
+relationship AutoDetected_b2dad2e9-f169-489f-9900-aa3f1f817928
+	fromColumn: fact_workflow_actions.workflow_type
+	toColumn: dim_workflow_type.workflow_type
+
+relationship a5e4b140-a118-b609-c4c7-f07fe00953c4
+	fromColumn: fact_sync_runs.date
+	toColumn: dim_date.date
+
+relationship d9d42f7d-b438-f398-9fdc-b408221aa63e
+	fromColumn: fact_sync_records.date
+	toColumn: dim_date.date
+
+relationship 90c89e39-754f-8eaf-9708-6800ec521567
+	fromColumn: fact_workflow_runs.date
+	toColumn: dim_date.date
+
+relationship c0dacf47-ea75-c08e-d368-befcd3200cc0
+	fromColumn: fact_workflow_actions.date
+	toColumn: dim_date.date
+
+relationship d18429c5-71b3-fea9-3c02-46aabda2cd45
+	fromColumn: fact_attribute_changes.date
+	toColumn: dim_date.date
+
+relationship 07abf8d2-0a2d-f62d-6d21-9bd6f353c6b2
+	fromColumn: fact_dq_issues.detected_date
+	toColumn: dim_date.date
+
+relationship c65c1427-3db7-ff6c-de97-bd67abf6dd8f
+	isActive: false
+	fromColumn: fact_dq_issues.resolved_date
+	toColumn: dim_date.date
+

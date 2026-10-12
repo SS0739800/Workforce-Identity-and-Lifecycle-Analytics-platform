@@ -1,0 +1,162 @@
+table fact_workflow_runs
+	lineageTag: 87f0da50-f04e-4e25-b02c-69a25b5f76a9
+
+	column workflow_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 443aca96-f771-4883-a74f-23ec4c1072e0
+		summarizeBy: sum
+		sourceColumn: workflow_key
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column employee_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: f73e233a-2bee-4562-9d46-2a00aa40e4ba
+		summarizeBy: none
+		sourceColumn: employee_key
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column date
+		dataType: dateTime
+		isHidden
+		formatString: Long Date
+		lineageTag: 3df3051f-07bc-4ddd-b007-0de68b79e41d
+		summarizeBy: none
+		sourceColumn: date
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column workflow_type
+		dataType: string
+		lineageTag: e64ca1bf-bb71-48f8-bfbc-44e3013443ac
+		summarizeBy: none
+		sourceColumn: workflow_type
+
+		annotation SummarizationSetBy = Automatic
+
+	column status
+		dataType: string
+		lineageTag: ed05e0d0-3f42-4b1b-ae6a-fcc78d0dc991
+		summarizeBy: none
+		sourceColumn: status
+
+		annotation SummarizationSetBy = Automatic
+
+	column initiated_by
+		dataType: string
+		lineageTag: b6d30cab-188e-418b-a138-88aeda2a4a7b
+		summarizeBy: none
+		sourceColumn: initiated_by
+
+		annotation SummarizationSetBy = Automatic
+
+	column is_rerun
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: a1dd3257-3fda-494f-a53f-502b872880f1
+		summarizeBy: none
+		sourceColumn: is_rerun
+
+		annotation SummarizationSetBy = Automatic
+
+	column duration_seconds
+		dataType: double
+		lineageTag: 72cc7f21-991c-45ec-a96a-6ab23226bdf4
+		summarizeBy: sum
+		sourceColumn: duration_seconds
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column actions
+		dataType: int64
+		formatString: 0
+		lineageTag: f3157b11-a14a-4063-ac3f-8b9b6a920406
+		summarizeBy: sum
+		sourceColumn: actions
+
+		annotation SummarizationSetBy = Automatic
+
+	column failed_actions
+		dataType: int64
+		formatString: 0
+		lineageTag: 547ba2ca-b08e-49b3-a4a1-88b088f43006
+		summarizeBy: sum
+		sourceColumn: failed_actions
+
+		annotation SummarizationSetBy = Automatic
+
+	column requested_at_utc
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 32de3144-9651-4ca1-8964-e7f9c826cd03
+		summarizeBy: none
+		sourceColumn: requested_at_utc
+
+		annotation SummarizationSetBy = Automatic
+
+	column started_at_utc
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: cc8f8ba7-bde9-4ae3-9ada-80360b71c430
+		summarizeBy: none
+		sourceColumn: started_at_utc
+
+		annotation SummarizationSetBy = Automatic
+
+	column completed_at_utc
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 0036971d-75d4-47f5-bfcb-d47403669300
+		summarizeBy: none
+		sourceColumn: completed_at_utc
+
+		annotation SummarizationSetBy = Automatic
+
+	partition fact_workflow_runs = m
+		mode: import
+		source =
+				// fact_workflow_runs: one row per workflow run. date = the day it was requested.
+				// Relates to dim_date on date and dim_employee on employee_key.
+				let
+				    Source = PostgreSQL.Database(DatabaseServer, DatabaseName),
+				    View = Source{[Schema = "reporting", Item = "fact_workflow_runs"]}[Data],
+				    // The view provides *_utc columns as plain UTC timestamps; the time-zone-aware
+				    // originals don't convert reliably in the connector, so they are dropped here.
+				    WithoutZonedTimes = Table.RemoveColumns(View, {"requested_at", "started_at", "completed_at"}),
+				    Typed = Table.TransformColumnTypes(WithoutZonedTimes, {
+				        {"workflow_key", Int64.Type},
+				        {"employee_key", Int64.Type},
+				        {"date", type date},
+				        {"workflow_type", type text},
+				        {"status", type text},
+				        {"initiated_by", type text},
+				        {"is_rerun", type logical},
+				        {"requested_at_utc", type datetime},
+				        {"started_at_utc", type datetime},
+				        {"completed_at_utc", type datetime},
+				        {"duration_seconds", type number},
+				        {"actions", Int64.Type},
+				        {"failed_actions", Int64.Type}
+				    })
+				in
+				    Typed
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

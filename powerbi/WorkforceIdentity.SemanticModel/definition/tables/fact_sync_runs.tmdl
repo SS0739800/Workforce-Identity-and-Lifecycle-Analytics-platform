@@ -1,0 +1,147 @@
+table fact_sync_runs
+	lineageTag: 25553b7c-611d-4eda-b8b3-699d698056cf
+
+	column sync_run_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: d1015bbf-e123-4d02-9e81-f037b738d5fd
+		summarizeBy: sum
+		sourceColumn: sync_run_key
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column run_id
+		dataType: string
+		lineageTag: 0254f505-3fb4-453d-aaa6-ce31f19b2d85
+		summarizeBy: none
+		sourceColumn: run_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column date
+		dataType: dateTime
+		isHidden
+		formatString: Long Date
+		lineageTag: f37c558c-a79b-4bdf-8f86-3ce0dd06bf56
+		summarizeBy: none
+		sourceColumn: date
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column status
+		dataType: string
+		lineageTag: fc6c224b-b241-49d4-bd65-1ab7395fce25
+		summarizeBy: none
+		sourceColumn: status
+
+		annotation SummarizationSetBy = Automatic
+
+	column triggered_by
+		dataType: string
+		lineageTag: d2d32eb3-d8d6-4c2a-b021-d972b62c5b88
+		summarizeBy: none
+		sourceColumn: triggered_by
+
+		annotation SummarizationSetBy = Automatic
+
+	column total_records
+		dataType: int64
+		formatString: 0
+		lineageTag: bc01b4dd-3663-4f54-9ee6-4c1ee24d6fe1
+		summarizeBy: sum
+		sourceColumn: total_records
+
+		annotation SummarizationSetBy = Automatic
+
+	column successful_records
+		dataType: int64
+		formatString: 0
+		lineageTag: 1b2cd63e-fe15-4383-9fd0-13ef63c088fc
+		summarizeBy: sum
+		sourceColumn: successful_records
+
+		annotation SummarizationSetBy = Automatic
+
+	column failed_records
+		dataType: int64
+		formatString: 0
+		lineageTag: 9067559e-442d-46a0-a256-f171f078f579
+		summarizeBy: sum
+		sourceColumn: failed_records
+
+		annotation SummarizationSetBy = Automatic
+
+	column skipped_records
+		dataType: int64
+		formatString: 0
+		lineageTag: f229f2bd-8e8f-46ad-aab1-a8a42c9f25e5
+		summarizeBy: sum
+		sourceColumn: skipped_records
+
+		annotation SummarizationSetBy = Automatic
+
+	column duration_seconds
+		dataType: double
+		lineageTag: c3067ce8-61ba-496f-9f3c-1f6ba235cdbc
+		summarizeBy: sum
+		sourceColumn: duration_seconds
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column error_message
+		dataType: string
+		lineageTag: 08483162-5b1e-46ec-a05e-3edbf7659389
+		summarizeBy: none
+		sourceColumn: error_message
+
+		annotation SummarizationSetBy = Automatic
+
+	column started_at_utc
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 9e101b9f-913c-40b7-b9fa-56d42f6240df
+		summarizeBy: none
+		sourceColumn: started_at_utc
+
+		annotation SummarizationSetBy = Automatic
+
+	partition fact_sync_runs = m
+		mode: import
+		source =
+				// fact_sync_runs: one row per sync run. Relates to dim_date on date (no employee: a run covers everyone).
+				let
+				    Source = PostgreSQL.Database(DatabaseServer, DatabaseName),
+				    View = Source{[Schema = "reporting", Item = "fact_sync_runs"]}[Data],
+				    // The view provides started_at_utc as a plain UTC timestamp; the time-zone-aware
+				    // original doesn't convert reliably in the connector, so it is dropped here.
+				    WithoutZonedTimes = Table.RemoveColumns(View, {"started_at"}),
+				    Typed = Table.TransformColumnTypes(WithoutZonedTimes, {
+				        {"sync_run_key", Int64.Type},
+				        {"run_id", type text},
+				        {"date", type date},
+				        {"started_at_utc", type datetime},
+				        {"status", type text},
+				        {"triggered_by", type text},
+				        {"total_records", Int64.Type},
+				        {"successful_records", Int64.Type},
+				        {"failed_records", Int64.Type},
+				        {"skipped_records", Int64.Type},
+				        {"duration_seconds", type number},
+				        {"error_message", type text}
+				    })
+				in
+				    Typed
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Exception
+
