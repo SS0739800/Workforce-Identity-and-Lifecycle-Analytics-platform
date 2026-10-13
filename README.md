@@ -14,8 +14,9 @@ infrastructure or data is used.
 > SQL analytics, a REST API, and lifecycle operations (sync, workflows, data-quality scan) that run
 > against the database, and a four-page Power BI report (Phase 4) saved as a Power BI Project
 > in `powerbi/`, and an AI explanation layer (Groq, with Gemini as a fallback) over the analytics
-> (Phase 5), a Streamlit operations console on top of the API (Phase 6), and an on-demand AWS
-> deployment sized for the free tier (Phase 7).
+> (Phase 5), a Streamlit operations console on top of the API (Phase 6), and a cloud deployment
+> that costs nothing to run: Azure Container Apps with a Neon database (Phase 7). An AWS version
+> is included as an alternative.
 
 ## What exists so far
 
@@ -43,12 +44,17 @@ infrastructure or data is used.
   (it has no database access of its own). From it you can look up one employee's access, workflows,
   changes and audit trail, re-run failed workflows, run a sync or a data-quality scan (each needs
   a confirmation tick first), and ask the AI layer questions.
-- An AWS deployment created and deleted with one command (`scripts/aws_deploy.py`). It runs the API and
-  console as containers on one EC2 instance, with PostgreSQL on RDS in private subnets. Secrets
-  live in SSM Parameter Store, the release and CSVs in S3, and logs in CloudWatch. Everything is
-  written in CloudFormation and kept within the free tier, with no load balancer, NAT gateway or
-  Secrets Manager. See [docs/aws.md](docs/aws.md), including the trade-offs against a production
-  setup.
+- A deployment to **Azure Container Apps**, which is the one in use. GitHub Actions builds the image
+  on every push. Bicep defines the infrastructure, and one script (`scripts/azure_deploy.py`)
+  migrates the database and deploys the image for the current commit. The console is the only
+  public endpoint, over HTTPS and open to one IP address; the API is internal. Both apps scale to
+  zero, and PostgreSQL runs on Neon's free plan. See [docs/azure.md](docs/azure.md).
+- **Why Azure and not AWS:** the goal was a deployment that is actually free. On AWS the database
+  and server are free only for the first 6–12 months, through the free tier or credits. On Azure,
+  Container Apps' monthly free grant and Neon's free plan have no end date.
+- **AWS as an alternative:** an AWS version is kept in `deploy/aws` for anyone who prefers it. It
+  runs EC2 and RDS through CloudFormation, with SSM Parameter Store, S3 and CloudWatch, and is
+  created and deleted with `scripts/aws_deploy.py`. See [docs/aws.md](docs/aws.md).
 - Tests for the validation rules, the shared lifecycle engine, generated data, the load step,
   every query (checked against an independent Python calculation), the lifecycle operations
   against PostgreSQL, the API, the AI layer (with the models mocked), the Streamlit pages
@@ -82,13 +88,13 @@ streamlit run streamlit_app/app.py # console at http://localhost:8501
 
 The console calls the API at `API_BASE_URL` (default `http://127.0.0.1:8000`).
 
-To run the API and console in containers instead (the same image the AWS deployment uses):
+To run the API and console in containers instead (the same image the cloud deployments use):
 
 ```bash
 docker compose --profile app up -d --build   # console at http://localhost:8501
 ```
 
-To deploy to AWS, see [docs/aws.md](docs/aws.md).
+To deploy, see [docs/azure.md](docs/azure.md) (free), or [docs/aws.md](docs/aws.md) for AWS.
 
 ## Tests
 
@@ -121,11 +127,14 @@ app/
 streamlit_app/ Streamlit console: app.py (navigation), api.py (HTTP client),
                ui.py (shared tables, charts, filters), pages/
 .streamlit/    Streamlit theme and server settings
-deploy/aws/    CloudFormation templates and the instance start script
+deploy/azure/  Bicep templates (Container Apps, Log Analytics, budget alert)
+deploy/aws/    CloudFormation templates and the instance start script (alternative)
+.github/       workflow that builds and publishes the image
 Dockerfile     one image for the API, the console and the jobs
 alembic/       migrations
 powerbi/       Power Query scripts, DAX measures, report design, validation query
-scripts/       generate_data.py, load_data.py, create_reporting_user.py, aws_deploy.py
+scripts/       generate_data.py, load_data.py, create_reporting_user.py,
+               azure_deploy.py, aws_deploy.py, deploy_helpers.py
 tests/
 docs/
 ```

@@ -1,5 +1,9 @@
 # AWS deployment
 
+> The project's own deployment is on Azure ([azure.md](azure.md)), because that can stay free with
+> no time limit. This AWS version is complete and kept for anyone who prefers AWS. On AWS it is free
+> only within the free tier or new-account credits.
+
 An on-demand demo environment: one command creates it, one deletes it. It is built to stay inside
 the AWS free tier, so some choices differ from what a production team would pick. Those trade-offs
 are listed below.

@@ -11,7 +11,6 @@ never uncommitted files or .env. See docs/aws.md.
 """
 
 import argparse
-import ipaddress
 import logging
 import secrets
 import string
@@ -29,6 +28,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from app.core.config import PROJECT_ROOT, get_settings  # noqa: E402
 from app.core.logging import configure_logging  # noqa: E402
+from scripts.deploy_helpers import DeployError, my_public_cidr  # noqa: E402
 
 logger = logging.getLogger("aws_deploy")
 
@@ -39,29 +39,12 @@ RELEASE_KEY = "release/app.tar.gz"
 OPTIONAL_KEYS = {"groq-api-key": "groq_api_key", "gemini-api-key": "gemini_api_key"}
 
 
-class DeployError(Exception):
-    pass
-
-
-# --- small helpers (unit-tested in tests/test_deploy.py) ------------------------------------------
+# --- small helpers (unit-tested in tests/test_deploy_aws.py) --------------------------------------
 
 def new_password(length: int = 32) -> str:
     """Letters and digits only, so it can go into a database URL without escaping."""
     alphabet = string.ascii_letters + string.digits
     return "".join(secrets.choice(alphabet) for _ in range(length))
-
-
-def as_cidr(ip_text: str) -> str:
-    """'203.0.113.7\\n' -> '203.0.113.7/32'. Only a single public IPv4 address is accepted."""
-    address = ipaddress.ip_address(ip_text.strip())
-    if address.version != 4 or not address.is_global:
-        raise DeployError(f"Expected a public IPv4 address, got {address}")
-    return f"{address}/32"
-
-
-def my_public_cidr() -> str:
-    with urllib.request.urlopen("https://checkip.amazonaws.com", timeout=10) as response:
-        return as_cidr(response.read().decode())
 
 
 def outputs(stack: dict) -> dict[str, str]:

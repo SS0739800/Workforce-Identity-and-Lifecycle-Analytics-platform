@@ -1,4 +1,4 @@
-"""Checks on the AWS deployment files that don't need an AWS account.
+"""Checks on the AWS deployment files (deploy/aws) that don't need an AWS account.
 
 The templates are linted with cfn-lint, and the properties that keep the environment free and
 private are asserted directly, so a later edit can't quietly open the database or add a paid service.
@@ -12,7 +12,8 @@ from cfnlint.api import ManualArgs, lint_file
 from cfnlint.decode.cfn_yaml import loads
 
 from app.core.config import PROJECT_ROOT
-from scripts.aws_deploy import DeployError, as_cidr, new_password
+from scripts.aws_deploy import new_password
+from scripts.deploy_helpers import DeployError, as_cidr
 
 DEPLOY = PROJECT_ROOT / "deploy" / "aws"
 
