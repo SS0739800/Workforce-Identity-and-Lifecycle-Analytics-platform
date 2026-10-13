@@ -73,6 +73,13 @@ numbers in the facts (allowing for rounding and percentage/fraction formats). An
 found are listed in `ungrounded_numbers` and the status becomes `needs_review`. This catches
 invented or recalculated metrics. It doesn't prove the wording is right.
 
+Numbers in the facts' key names count as well. The first run of `scripts/capture_ai_examples.py`
+flagged an incident report for saying "the previous 30 days". The 30 came from the key
+`same_error_type_in_previous_30_days`, which the check didn't read at the time. That was a false
+positive in the checker, not an error by the model; it is fixed and covered by a test.
+
+Real outputs, with the facts behind each one, are in [ai-examples.md](ai-examples.md).
+
 **Causes are kept separate.** Failure explanations and incident reports must have an "Observed"
 part and a separately labelled "possible areas to investigate" part. The simulated failure
 rates are assumptions of this project, and the model is told the records can't show *why* one

@@ -59,9 +59,12 @@ account = person["identity_account"]
 open_issues = [issue for issue in person["data_quality_issues"] if issue["status"] == "open"]
 failed_workflows = [run for run in workflows if run["status"] == "failed"]
 
+# Text values get their own row: six tiles across leave too little room for "terminated".
 ui.metric_row([
     ("Employment", person["employment_status"] + (" · on leave" if person["leave_status"] == "on_leave" else "")),
     ("Identity account", account["account_status"] if account else "none"),
+])
+ui.metric_row([
     ("Active groups", sum(g["status"] == "active" for g in person["groups"])),
     ("Active licenses", sum(lic["status"] == "active" for lic in person["licenses"])),
     ("Open DQ issues", len(open_issues)),

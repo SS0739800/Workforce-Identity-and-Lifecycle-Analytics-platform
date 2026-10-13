@@ -5,7 +5,6 @@ private are asserted directly, so a later edit can't quietly open the database o
 """
 
 import re
-from pathlib import Path
 
 import pytest
 from cfnlint.api import ManualArgs, lint_file

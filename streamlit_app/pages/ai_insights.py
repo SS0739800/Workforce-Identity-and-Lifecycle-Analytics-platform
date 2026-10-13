@@ -2,7 +2,6 @@
 
 from datetime import date
 
-import pandas as pd
 import streamlit as st
 
 from streamlit_app import api, ui

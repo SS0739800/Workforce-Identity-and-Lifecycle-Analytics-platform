@@ -37,7 +37,9 @@ def _collect(value, out: set[str]):
     elif isinstance(value, (date, datetime)):
         _collect(value.isoformat(), out)
     elif isinstance(value, dict):
-        for item in value.values():
+        # Key names are part of what the model reads ("..._in_previous_30_days"), so their numbers count too.
+        for key, item in value.items():
+            _collect(str(key).replace("_", " "), out)
             _collect(item, out)
     elif isinstance(value, (list, tuple)):
         for item in value:

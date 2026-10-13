@@ -2,7 +2,7 @@
 
 import json
 from collections import Counter
-from datetime import date, datetime, timezone
+from datetime import date
 
 import groq
 import httpx
@@ -67,6 +67,12 @@ def test_grounded_answer_passes_in_any_reasonable_format():
 def test_invented_numbers_are_flagged():
     facts = {"failures": 79}
     assert ungrounded_numbers("There were 79 failures, up 23.5% on last month.", facts) == ["23.5"]
+
+
+def test_numbers_in_fact_names_count_as_grounded():
+    """Found by docs/ai-examples.md: the model quoted the window from a key name and was wrongly flagged."""
+    facts = {"same_error_type_in_previous_30_days": 0}
+    assert ungrounded_numbers("PERMISSION_ERROR occurrences in the previous 30 days: 0", facts) == []
 
 
 # --- routing ------------------------------------------------------------------------------------

@@ -56,7 +56,7 @@ def show_error(error: ApiError):
 
 def metric_row(items: list[tuple[str, object]], help_text: dict | None = None):
     columns = st.columns(len(items))
-    for column, (label, value) in zip(columns, items):
+    for column, (label, value) in zip(columns, items, strict=True):
         column.metric(label, "-" if value is None else value, help=(help_text or {}).get(label), border=True)
 
 
@@ -81,6 +81,9 @@ def table(rows: list[dict], columns: list[str] | None = None, rename: dict | Non
     for column in frame.columns:
         if column.endswith("_at") or column == "timestamp":
             frame[column] = pd.to_datetime(frame[column], utc=True).dt.strftime("%Y-%m-%d %H:%M")
+    # Empty text cells read better blank than as a grey "None".
+    text_columns = frame.select_dtypes(include=["object", "string"]).columns
+    frame[text_columns] = frame[text_columns].fillna("")
     # Readable headers by default ("open_issues" -> "Open issues"); explicit names win.
     headers = {c: c.replace("_", " ").capitalize() for c in frame.columns}
     headers.update(rename or {})

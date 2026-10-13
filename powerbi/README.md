@@ -96,7 +96,7 @@ Re-run `create_reporting_user.py` after any migration that re-creates the report
    from `.env`.
 4. The local Docker database has no TLS certificate. Power BI will say it can't connect with an
    encrypted connection. For `localhost` only, accept the unencrypted connection. For a cloud
-   database (Phase 7), keep encryption on.
+   database such as Neon, keep encryption on.
 5. Close & Apply. Row counts should match `validation.sql`.
 
 Timestamps come from the views' `*_utc` columns (plain UTC date-times). The time-zone-aware

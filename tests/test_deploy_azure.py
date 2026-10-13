@@ -30,6 +30,8 @@ def bicep_cli() -> str | None:
 def compiled():
     cli = bicep_cli()
     if not cli:
+        if os.environ.get("REQUIRE_BICEP"):  # set in CI, so these checks can't be skipped silently
+            pytest.fail("Bicep CLI not installed (REQUIRE_BICEP is set)")
         pytest.skip("Bicep CLI not installed")
 
     def build(name: str) -> dict:

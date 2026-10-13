@@ -1,3 +1,5 @@
+import os
+
 import pytest
 from alembic import command
 from alembic.config import Config
@@ -16,18 +18,25 @@ def dataset() -> dict[str, list[dict]]:
     return generate()
 
 
+def _no_database(reason: str):
+    """Skip the database tests locally; fail in CI, where a skipped suite would look like a pass."""
+    if os.environ.get("REQUIRE_TEST_DATABASE"):
+        pytest.fail(f"{reason} (REQUIRE_TEST_DATABASE is set)")
+    pytest.skip(reason)
+
+
 @pytest.fixture(scope="session")
 def db_engine():
     """A migrated, empty test database. Skips the database tests if PostgreSQL is not reachable."""
     url = get_settings().test_database_url
     if not url:
-        pytest.skip("TEST_DATABASE_URL is not set")
+        _no_database("TEST_DATABASE_URL is not set")
     engine = create_engine(url, connect_args={"connect_timeout": 5})
     try:
         with engine.connect() as conn:
             conn.execute(text("SELECT 1"))
     except OperationalError:
-        pytest.skip("Test database is not reachable; start it with `docker compose up -d`")
+        _no_database("Test database is not reachable; start it with `docker compose up -d`")
 
     config = Config(str(PROJECT_ROOT / "alembic.ini"))
     config.set_main_option("script_location", str(PROJECT_ROOT / "alembic"))

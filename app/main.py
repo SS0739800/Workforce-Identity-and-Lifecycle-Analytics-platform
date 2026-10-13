@@ -32,7 +32,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="Workforce Identity & Lifecycle Analytics API",
     description="API over synthetic identity operations data: investigation, analytics and simulated lifecycle operations.",
-    version="0.3.0",
+    version="1.0.0",
     lifespan=lifespan,
 )
 app.include_router(employees.router)

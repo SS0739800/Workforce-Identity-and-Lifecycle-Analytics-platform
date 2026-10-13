@@ -3,8 +3,8 @@
 All metrics come from named SQL queries in [`app/analytics/sql/`](../app/analytics/sql/).
 Each file starts with the question it answers and can be run directly in `psql`.
 [`app/analytics/queries.py`](../app/analytics/queries.py) is the registry: the API can only
-run queries listed there, and the AI layer (Phase 5) will use the same list instead of
-generating SQL.
+run queries listed there, and the AI layer chooses from the same list instead of generating
+SQL ([ai.md](ai.md)).
 
 Every query is tested against the same figure computed separately in Python from the
 generated rows (`tests/test_analytics.py`).
