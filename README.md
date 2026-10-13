@@ -38,6 +38,11 @@ query. It never writes SQL or supplies numbers of its own.
 
 ![AI insights](docs/images/ai-insights.png)
 
+**The Power BI report** reads the `reporting` views through a read-only login. Its totals match the
+console's, which come from separate SQL queries through the API.
+
+![Power BI overview page](docs/images/powerbi-overview.png)
+
 More: [synchronization](docs/images/synchronization.png) ·
 [lifecycle](docs/images/lifecycle.png) · [data quality](docs/images/data-quality.png)
 
