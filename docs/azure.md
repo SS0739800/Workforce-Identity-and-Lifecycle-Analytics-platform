@@ -79,7 +79,9 @@ Prices and allowances change. Check the
    az bicep install
    ```
 2. **Neon database.** Sign up at [neon.com](https://neon.com) (free plan, no card). Create a project
-   in a US East region, close to the Azure region `eastus`. Copy its connection string into `.env`:
+   in a US East region, close to the Azure region `eastus`. In the Connect dialog, turn **connection
+   pooling off**. The migrations need a direct connection, and SQLAlchemy already pools connections
+   itself. The direct host has no `-pooler` in its name. Copy that connection string into `.env`:
    ```
    NEON_DATABASE_URL=postgresql://...neon.tech/neondb?sslmode=require
    ```

@@ -57,6 +57,9 @@ def sqlalchemy_url(url: str) -> str:
     parts = urllib.parse.urlsplit(url.strip())
     if parts.scheme not in ("postgres", "postgresql", "postgresql+psycopg"):
         raise DeployError("NEON_DATABASE_URL must be a postgresql:// connection string")
+    if "-pooler" in parts.netloc:
+        # Migrations should use a direct connection, and SQLAlchemy already pools connections itself.
+        logger.warning("NEON_DATABASE_URL is Neon's pooled endpoint; use the direct one (pooling off in Neon)")
     query = dict(urllib.parse.parse_qsl(parts.query))
     query.setdefault("sslmode", "require")  # Neon only accepts TLS connections
     return urllib.parse.urlunsplit(
@@ -82,7 +85,8 @@ def parameters_file(values: dict, directory: Path) -> Path:
 
 def az(*args: str) -> dict | list | str | None:
     """Run an Azure CLI command and return its JSON output."""
-    executable = shutil.which("az")
+    # On Windows the CLI folder also holds an extensionless `az` shell script, which Windows can't run.
+    executable = (shutil.which("az.cmd") if os.name == "nt" else None) or shutil.which("az")
     if not executable:
         raise DeployError("Azure CLI not found. Install it (see docs/azure.md), then run `az login`.")
     result = subprocess.run([executable, *args, "--output", "json"], capture_output=True, text=True)
