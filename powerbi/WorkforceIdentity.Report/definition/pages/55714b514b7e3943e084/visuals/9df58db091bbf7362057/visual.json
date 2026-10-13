@@ -27,7 +27,8 @@
                 }
               },
               "queryRef": "dim_employee.employee_name",
-              "nativeQueryRef": "employee_name"
+              "nativeQueryRef": "employee_name",
+              "displayName": "Name"
             },
             {
               "field": {
@@ -41,7 +42,8 @@
                 }
               },
               "queryRef": "dim_employee.hr_employee_id",
-              "nativeQueryRef": "hr_employee_id"
+              "nativeQueryRef": "hr_employee_id",
+              "displayName": "HR ID"
             },
             {
               "field": {
@@ -55,7 +57,8 @@
                 }
               },
               "queryRef": "dim_employee.department",
-              "nativeQueryRef": "department"
+              "nativeQueryRef": "department",
+              "displayName": "Department"
             },
             {
               "field": {
@@ -69,7 +72,8 @@
                 }
               },
               "queryRef": "dim_employee.termination_date",
-              "nativeQueryRef": "termination_date"
+              "nativeQueryRef": "termination_date",
+              "displayName": "Terminated"
             },
             {
               "field": {
@@ -83,7 +87,8 @@
                 }
               },
               "queryRef": "dim_employee.account_status",
-              "nativeQueryRef": "account_status"
+              "nativeQueryRef": "account_status",
+              "displayName": "Account"
             }
           ]
         }

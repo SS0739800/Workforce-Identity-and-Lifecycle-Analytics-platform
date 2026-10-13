@@ -28,6 +28,7 @@
               },
               "queryRef": "dim_date.date",
               "nativeQueryRef": "date",
+              "displayName": "Date",
               "active": true
             }
           ]

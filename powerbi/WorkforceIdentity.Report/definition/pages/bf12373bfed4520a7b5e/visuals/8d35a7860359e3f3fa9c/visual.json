@@ -28,6 +28,7 @@
               },
               "queryRef": "fact_sync_records.error_type",
               "nativeQueryRef": "error_type",
+              "displayName": "Error type",
               "active": true
             }
           ]

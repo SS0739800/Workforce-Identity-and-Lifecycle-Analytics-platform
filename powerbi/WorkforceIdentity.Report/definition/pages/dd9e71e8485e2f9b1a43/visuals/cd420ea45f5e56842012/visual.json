@@ -28,6 +28,7 @@
               },
               "queryRef": "fact_sync_records.had_open_dq_issue",
               "nativeQueryRef": "had_open_dq_issue",
+              "displayName": "Open DQ issue at the time",
               "active": true
             }
           ]

@@ -28,6 +28,7 @@
               },
               "queryRef": "dim_employee.location",
               "nativeQueryRef": "location",
+              "displayName": "Location",
               "active": true
             }
           ]

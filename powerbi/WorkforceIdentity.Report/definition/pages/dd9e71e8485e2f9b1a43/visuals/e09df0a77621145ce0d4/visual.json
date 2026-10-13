@@ -19,7 +19,7 @@
               {
                 "textRuns": [
                   {
-                    "value": "Records with an open data-quality issue fail to sync far more often. In this synthetic dataset that link is built in (the sync validates the same rules the scan checks), so this shows an association, not a measured cause.",
+                    "value": "In this synthetic dataset the link is built in (the sync validates the same rules the scan checks), so this is an association, not a measured cause.",
                     "textStyle": {
                       "fontStyle": "italic",
                       "fontSize": "10pt",

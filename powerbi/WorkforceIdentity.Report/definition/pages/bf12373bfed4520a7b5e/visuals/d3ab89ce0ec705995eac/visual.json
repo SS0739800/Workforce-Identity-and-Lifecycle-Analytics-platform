@@ -27,7 +27,8 @@
                 }
               },
               "queryRef": "fact_sync_runs.started_at_utc",
-              "nativeQueryRef": "started_at_utc"
+              "nativeQueryRef": "started_at_utc",
+              "displayName": "Started (UTC)"
             },
             {
               "field": {
@@ -41,7 +42,8 @@
                 }
               },
               "queryRef": "fact_sync_runs.run_id",
-              "nativeQueryRef": "run_id"
+              "nativeQueryRef": "run_id",
+              "displayName": "Run ID"
             },
             {
               "field": {
@@ -55,7 +57,8 @@
                 }
               },
               "queryRef": "fact_sync_runs.triggered_by",
-              "nativeQueryRef": "triggered_by"
+              "nativeQueryRef": "triggered_by",
+              "displayName": "Triggered by"
             },
             {
               "field": {
@@ -69,7 +72,8 @@
                 }
               },
               "queryRef": "fact_sync_runs.error_message",
-              "nativeQueryRef": "error_message"
+              "nativeQueryRef": "error_message",
+              "displayName": "Error message"
             }
           ]
         }

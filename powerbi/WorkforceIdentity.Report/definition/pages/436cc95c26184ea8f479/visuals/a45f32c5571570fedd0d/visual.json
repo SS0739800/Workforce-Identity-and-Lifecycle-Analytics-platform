@@ -28,6 +28,7 @@
               },
               "queryRef": "fact_workflow_actions.error_type",
               "nativeQueryRef": "error_type",
+              "displayName": "Error type",
               "active": true
             }
           ]
@@ -47,6 +48,7 @@
               },
               "queryRef": "fact_workflow_actions.action_type",
               "nativeQueryRef": "action_type",
+              "displayName": "Action",
               "active": true
             }
           ]

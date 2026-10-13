@@ -28,6 +28,7 @@
               },
               "queryRef": "dim_date.month_label",
               "nativeQueryRef": "month_label",
+              "displayName": "Month",
               "active": true
             }
           ]
@@ -46,7 +47,8 @@
                 }
               },
               "queryRef": "dim_workflow_type.workflow_label",
-              "nativeQueryRef": "workflow_label"
+              "nativeQueryRef": "workflow_label",
+              "displayName": "Workflow"
             }
           ]
         },

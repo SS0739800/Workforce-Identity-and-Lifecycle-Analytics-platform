@@ -28,6 +28,7 @@
               },
               "queryRef": "dim_employee.department",
               "nativeQueryRef": "department",
+              "displayName": "Department",
               "active": true
             }
           ]

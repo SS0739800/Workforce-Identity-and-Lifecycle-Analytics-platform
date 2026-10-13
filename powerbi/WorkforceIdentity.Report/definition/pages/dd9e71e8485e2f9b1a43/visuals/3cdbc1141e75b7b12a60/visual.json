@@ -28,6 +28,7 @@
               },
               "queryRef": "fact_dq_issues.field_name",
               "nativeQueryRef": "field_name",
+              "displayName": "Field",
               "active": true
             }
           ]
